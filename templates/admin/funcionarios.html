@@ -14,13 +14,22 @@
     <div class="card-body">
         <form method="POST" action="{{ url_for('adicionar_funcionario') }}">
             <div class="row g-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <label class="form-label">Matrícula</label>
                     <input type="text" name="matricula" class="form-control" placeholder="Ex: 00123" required>
                 </div>
-                <div class="col-md-7">
+                <div class="col-md-4">
                     <label class="form-label">Nome completo</label>
                     <input type="text" name="nome" class="form-control" placeholder="Nome do funcionário" required>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Unidade</label>
+                    <select name="unidade" class="form-select" required>
+                        <option value="" disabled selected>Selecione a unidade...</option>
+                        {% for u in unidades %}
+                        <option value="{{ u }}">{{ u }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
                 <div class="col-md-2">
                     <button type="submit" class="btn btn-success w-100">
@@ -45,6 +54,7 @@
                     <th>#</th>
                     <th>Matrícula</th>
                     <th>Nome</th>
+                    <th>Unidade</th>
                     <th>Situação</th>
                     <th style="width:80px;"></th>
                 </tr>
@@ -59,6 +69,11 @@
                         </code>
                     </td>
                     <td><span class="fw-medium">{{ f.nome }}</span></td>
+                    <td>
+                        <span class="badge" style="background:#e8eeff;color:#002a80;font-size:.75rem;">
+                            {{ f.unidade or '—' }}
+                        </span>
+                    </td>
                     <td>
                         {% if f.votou %}
                         <span class="badge bg-success">

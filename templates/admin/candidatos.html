@@ -14,13 +14,9 @@
     <div class="card-body">
         <form method="POST" action="{{ url_for('adicionar_candidato') }}" enctype="multipart/form-data">
             <div class="row g-3 align-items-end">
-                <div class="col-md-3">
+                <div class="col-md-5">
                     <label class="form-label">Nome completo</label>
                     <input type="text" name="nome" class="form-control" placeholder="Nome do candidato" required>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">Cargo / Setor</label>
-                    <input type="text" name="cargo" class="form-control" placeholder="Ex: Técnico" required>
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Unidade</label>
@@ -57,7 +53,6 @@
                 <tr>
                     <th style="width:70px;">Foto</th>
                     <th>Nome</th>
-                    <th>Cargo / Setor</th>
                     <th>Unidade</th>
                     <th>Alterar Foto</th>
                     <th style="width:100px;"></th>
@@ -78,7 +73,6 @@
                         {% endif %}
                     </td>
                     <td><span class="fw-semibold">{{ c.nome }}</span></td>
-                    <td><span class="text-muted">{{ c.cargo }}</span></td>
                     <td>
                         <span class="badge" style="background:#e6f7ee;color:#006b2b;font-size:.75rem;">
                             {{ c.unidade or '—' }}

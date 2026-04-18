@@ -1,63 +1,56 @@
-{% extends 'base.html' %}
-{% block title %}Candidatos{% endblock %}
+{% extends 'base_admin.html' %}
+{% block title %}Candidatos — CIPA 2026{% endblock %}
 
-{% block navbar %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
-            <i class="bi bi-shield-check"></i> CIPA 2026 — Admin
-        </a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="{{ url_for('candidatos') }}"><i class="bi bi-people"></i> Candidatos</a>
-            <a class="nav-link" href="{{ url_for('funcionarios') }}"><i class="bi bi-person-badge"></i> Funcionários</a>
-            <a class="nav-link" href="{{ url_for('gerenciar_eleicao') }}"><i class="bi bi-ballot"></i> Eleição</a>
-            <a class="nav-link" href="{{ url_for('resultado') }}"><i class="bi bi-bar-chart"></i> Resultado</a>
-            <a class="nav-link text-warning" href="{{ url_for('logout_admin') }}"><i class="bi bi-box-arrow-right"></i> Sair</a>
-        </div>
+{% block admin_content %}
+<div class="d-flex align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-0">Candidatos</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Gerencie os candidatos da eleição</p>
     </div>
-</nav>
-{% endblock %}
+</div>
 
-{% block content %}
-<h3 class="mb-4"><i class="bi bi-people"></i> Candidatos</h3>
-
-<div class="card shadow mb-4">
-    <div class="card-header bg-light"><strong>Adicionar novo candidato</strong></div>
+<div class="card mb-4">
+    <div class="card-header">Adicionar novo candidato</div>
     <div class="card-body">
-        <form method="POST" action="{{ url_for('adicionar_candidato') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
-            <div class="col-md-4">
-                <label class="form-label">Nome completo</label>
-                <input type="text" name="nome" class="form-control" placeholder="Nome completo" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Cargo / Setor</label>
-                <input type="text" name="cargo" class="form-control" placeholder="Cargo / Setor" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label">Foto (opcional)</label>
-                <input type="file" name="foto" class="form-control" accept="image/*">
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="bi bi-person-plus"></i> Adicionar
-                </button>
+        <form method="POST" action="{{ url_for('adicionar_candidato') }}" enctype="multipart/form-data">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Nome completo</label>
+                    <input type="text" name="nome" class="form-control" placeholder="Nome do candidato" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Cargo / Setor</label>
+                    <input type="text" name="cargo" class="form-control" placeholder="Ex: Produção" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Foto (opcional)</label>
+                    <input type="file" name="foto" class="form-control" accept="image/*">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-lg"></i> Adicionar
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<div class="card shadow">
-    <div class="card-header bg-light"><strong>Lista de Candidatos ({{ candidatos|length }})</strong></div>
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Lista de Candidatos</span>
+        <span class="badge bg-primary">{{ candidatos|length }}</span>
+    </div>
     <div class="card-body p-0">
         {% if candidatos %}
-        <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
+        <table class="table table-hover mb-0">
+            <thead>
                 <tr>
-                    <th style="width:70px">Foto</th>
+                    <th style="width:70px;">Foto</th>
                     <th>Nome</th>
                     <th>Cargo / Setor</th>
                     <th>Alterar Foto</th>
-                    <th>Ação</th>
+                    <th style="width:100px;"></th>
                 </tr>
             </thead>
             <tbody>
@@ -65,22 +58,22 @@
                 <tr>
                     <td>
                         {% if c.foto %}
-                        <img src="{{ c.foto }}"
-                             class="rounded-circle" style="width:50px;height:50px;object-fit:cover;"
-                             alt="{{ c.nome }}">
+                        <img src="{{ c.foto }}" class="rounded-circle"
+                             style="width:46px;height:46px;object-fit:cover;border:2px solid #e5e7eb;">
                         {% else %}
-                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
-                             style="width:50px;height:50px;">
-                            <i class="bi bi-person-fill text-white fs-4"></i>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:46px;height:46px;background:#f3f4f6;border:2px solid #e5e7eb;">
+                            <i class="bi bi-person-fill text-secondary"></i>
                         </div>
                         {% endif %}
                     </td>
-                    <td><strong>{{ c.nome }}</strong></td>
-                    <td>{{ c.cargo }}</td>
+                    <td><span class="fw-semibold">{{ c.nome }}</span></td>
+                    <td><span class="text-muted">{{ c.cargo }}</span></td>
                     <td>
                         <form method="POST" action="{{ url_for('upload_foto', id=c.id) }}"
                               enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
-                            <input type="file" name="foto" class="form-control form-control-sm" accept="image/*" required style="max-width:200px">
+                            <input type="file" name="foto" class="form-control form-control-sm"
+                                   accept="image/*" required style="max-width:190px;">
                             <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
                                 <i class="bi bi-upload"></i> Enviar
                             </button>
@@ -90,7 +83,7 @@
                         <a href="{{ url_for('remover_candidato', id=c.id) }}"
                            class="btn btn-sm btn-outline-danger"
                            onclick="return confirm('Remover {{ c.nome }}?')">
-                            <i class="bi bi-trash"></i> Remover
+                            <i class="bi bi-trash"></i>
                         </a>
                     </td>
                 </tr>
@@ -98,7 +91,10 @@
             </tbody>
         </table>
         {% else %}
-        <p class="text-muted text-center py-4">Nenhum candidato cadastrado ainda.</p>
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-people" style="font-size:2.5rem;opacity:.3;"></i>
+            <p class="mt-2 mb-0">Nenhum candidato cadastrado ainda.</p>
+        </div>
         {% endif %}
     </div>
 </div>

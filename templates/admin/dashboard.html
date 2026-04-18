@@ -66,6 +66,70 @@
 </div>
 {% endif %}
 
+{% if not andamento %}
+<div class="card mb-4" style="border-style:dashed;background:#fafafa;">
+    <div class="card-body text-center py-3">
+        <i class="bi bi-info-circle" style="color:#9ca3af;font-size:1.1rem;"></i>
+        <span class="text-muted ms-2" style="font-size:.825rem;">
+            O quadro de andamento será exibido assim que uma eleição for aberta.
+        </span>
+    </div>
+</div>
+{% endif %}
+
+{% if andamento %}
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-activity" style="color:#00AA44;"></i>
+            <strong>Andamento em tempo real</strong>
+        </div>
+        <span class="badge bg-success">
+            <i class="bi bi-circle-fill me-1" style="font-size:.45rem;vertical-align:middle;"></i>
+            {{ andamento|length }} unidade{{ 's' if andamento|length != 1 }} abertas
+        </span>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th>Unidade</th>
+                    <th style="width:80px;">Votos</th>
+                    <th style="width:110px;">Participação</th>
+                    <th style="width:220px;">Progresso</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in andamento %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-geo-alt-fill" style="color:#00AA44;font-size:.85rem;"></i>
+                            <span class="fw-semibold" style="font-size:.875rem;">{{ u.unidade }}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="fw-bold" style="color:#003399;">{{ u.votos }}</span>
+                    </td>
+                    <td>
+                        <span style="font-size:.825rem;">
+                            {{ u.votaram }}/{{ u.total }}
+                            <span class="text-muted">({{ u.pct }}%)</span>
+                        </span>
+                    </td>
+                    <td>
+                        <div class="progress" style="height:10px;">
+                            <div class="progress-bar" style="width:{{ u.pct }}%;"></div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
 <div class="card">
     <div class="card-header d-flex align-items-center gap-2">
         <i class="bi bi-lightning-charge" style="color:#F7941D;"></i>

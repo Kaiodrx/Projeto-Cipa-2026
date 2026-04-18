@@ -3,7 +3,6 @@
 
 {% block admin_content %}
 
-{# Cabeçalho de impressão #}
 <div class="d-none d-print-block text-center mb-4">
     <h2 class="fw-bold">Resultado Oficial — Eleição CIPA 2026</h2>
     <p class="text-muted">Documento gerado em: {{ now }}</p>
@@ -13,57 +12,62 @@
 <div class="d-flex align-items-center justify-content-between mb-4 d-print-none">
     <div>
         <h4 class="fw-bold mb-0">Resultado da Eleição</h4>
-        <p class="text-muted mb-0" style="font-size:.825rem;">Apuração dos votos em tempo real</p>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Apuração por unidade</p>
     </div>
     <button onclick="window.print()" class="btn btn-outline-secondary">
         <i class="bi bi-printer"></i> Imprimir Relatório
     </button>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="stat-card stat-blue">
-            <div class="stat-icon"><i class="bi bi-check2-square"></i></div>
-            <div class="stat-value">{{ total_votos }}</div>
-            <div class="stat-label">Votos Registrados</div>
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-3 text-center">
+            <div class="col-md-4">
+                <div class="fw-bold" style="font-size:1.75rem;color:#00AA44;">{{ total_votos_geral }}</div>
+                <div class="text-muted" style="font-size:.825rem;">Total de Votos</div>
+            </div>
+            <div class="col-md-4">
+                <div class="fw-bold" style="font-size:1.75rem;color:#003399;">{{ unidades|length }}</div>
+                <div class="text-muted" style="font-size:.825rem;">Unidades</div>
+            </div>
+            <div class="col-md-4">
+                <div class="fw-bold" style="font-size:1.75rem;color:#F7941D;">{{ now }}</div>
+                <div class="text-muted" style="font-size:.825rem;">Última atualização</div>
+            </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="stat-card stat-green">
-            <div class="stat-icon"><i class="bi bi-people"></i></div>
-            <div class="stat-value">{{ dados|length }}</div>
-            <div class="stat-label">Candidatos</div>
-        </div>
-    </div>
-    {% if dados and dados[0][1] > 0 %}
-    <div class="col-md-4">
-        <div class="stat-card stat-amber">
-            <div class="stat-icon"><i class="bi bi-trophy"></i></div>
-            <div class="stat-value" style="font-size:1.1rem;margin-top:.4rem;">{{ dados[0][0].nome }}</div>
-            <div class="stat-label">Mais votado</div>
-        </div>
-    </div>
-    {% endif %}
 </div>
 
-{% if dados %}
-<div class="card">
-    <div class="card-header">Apuração dos Votos</div>
+{% for unidade in unidades %}
+{% set dados_u = resultado_por_unidade[unidade] %}
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-geo-alt-fill" style="color:#00AA44;"></i>
+            <strong>{{ unidade }}</strong>
+        </div>
+        <div class="d-flex gap-3" style="font-size:.8rem;color:#6b7280;">
+            <span><i class="bi bi-check2-square"></i> {{ dados_u.total_votos }} votos</span>
+            <span><i class="bi bi-people"></i> {{ dados_u.votaram }}/{{ dados_u.total_funcionarios }} participaram</span>
+        </div>
+    </div>
+
+    {% if dados_u.dados %}
     <div class="card-body p-0">
         <table class="table table-hover mb-0 align-middle">
             <thead>
                 <tr>
-                    <th style="width:60px;">Pos.</th>
-                    <th style="width:60px;" class="d-print-none">Foto</th>
+                    <th style="width:55px;">Pos.</th>
+                    <th style="width:55px;" class="d-print-none">Foto</th>
                     <th>Candidato</th>
                     <th>Cargo / Setor</th>
-                    <th style="width:80px;">Votos</th>
-                    <th style="width:220px;">Percentual</th>
+                    <th style="width:70px;">Votos</th>
+                    <th style="width:200px;">Percentual</th>
                 </tr>
             </thead>
             <tbody>
-                {% for candidato, votos in dados %}
-                {% set pct = ((votos / total_votos * 100) | round(1)) if total_votos > 0 else 0 %}
+                {% for candidato, votos in dados_u.dados %}
+                {% set pct = ((votos / dados_u.total_votos * 100) | round(1)) if dados_u.total_votos > 0 else 0 %}
                 <tr class="{{ 'table-success' if loop.first and votos > 0 }}">
                     <td class="text-center fw-semibold">
                         {% if loop.first and votos > 0 %}
@@ -75,10 +79,10 @@
                     <td class="d-print-none">
                         {% if candidato.foto %}
                         <img src="{{ candidato.foto }}" class="rounded-circle"
-                             style="width:42px;height:42px;object-fit:cover;">
+                             style="width:40px;height:40px;object-fit:cover;">
                         {% else %}
                         <div class="rounded-circle d-flex align-items-center justify-content-center"
-                             style="width:42px;height:42px;background:#f3f4f6;">
+                             style="width:40px;height:40px;background:#f3f4f6;">
                             <i class="bi bi-person-fill text-secondary"></i>
                         </div>
                         {% endif %}
@@ -87,11 +91,11 @@
                     <td><span class="text-muted">{{ candidato.cargo }}</span></td>
                     <td class="text-center fw-bold">{{ votos }}</td>
                     <td>
-                        {% if total_votos > 0 %}
+                        {% if dados_u.total_votos > 0 %}
                         <div class="d-flex align-items-center gap-2">
-                            <div class="progress flex-grow-1" style="height:16px;">
+                            <div class="progress flex-grow-1" style="height:14px;">
                                 <div class="progress-bar" style="width:{{ pct }}%;">
-                                    {% if pct > 10 %}{{ pct }}%{% endif %}
+                                    {% if pct > 12 %}{{ pct }}%{% endif %}
                                 </div>
                             </div>
                             <span class="text-muted" style="font-size:.8rem;min-width:36px;">{{ pct }}%</span>
@@ -105,27 +109,22 @@
             </tbody>
         </table>
     </div>
-</div>
-
-<p class="text-muted mt-3 d-print-block" style="font-size:.8rem;">
-    <i class="bi bi-info-circle"></i>
-    Total de votos: <strong>{{ total_votos }}</strong> —
-    Resultado gerado em {{ now }} pelo Sistema de Votação CIPA 2026.
-</p>
-
-{% else %}
-<div class="card">
-    <div class="card-body text-center py-5 text-muted">
-        <i class="bi bi-bar-chart" style="font-size:2.5rem;opacity:.3;"></i>
-        <p class="mt-2 mb-0">Nenhum candidato cadastrado ainda.</p>
+    {% else %}
+    <div class="card-body text-center py-3 text-muted" style="font-size:.875rem;">
+        <i class="bi bi-people"></i> Nenhum candidato cadastrado nesta unidade.
     </div>
+    {% endif %}
 </div>
-{% endif %}
+{% endfor %}
+
+<p class="text-muted mt-2 d-print-block" style="font-size:.8rem;">
+    Resultado gerado em {{ now }} — Sistema de Votação CIPA 2026 — Neoenergia Brasília
+</p>
 
 <style>
 @media print {
-    body { background: #fff; font-size: 11pt; }
-    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    body { background: #fff; font-size: 10pt; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; page-break-inside: avoid; }
     .table-success td { background-color: #d1fae5 !important; -webkit-print-color-adjust: exact; }
 }
 </style>

@@ -1,16 +1,344 @@
-body {
-    background-color: #f4f6f9;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Variáveis ─────────────────────────────────────────────────────────────── */
+:root {
+  --primary:       #2563eb;
+  --primary-dark:  #1d4ed8;
+  --primary-light: #eff6ff;
+  --dark:          #0f172a;
+  --gray:          #6b7280;
+  --border:        #e5e7eb;
+  --bg:            #f1f5f9;
+  --card-shadow:   0 1px 3px rgba(0,0,0,.07), 0 6px 20px rgba(0,0,0,.05);
+  --radius:        14px;
+  --radius-sm:     8px;
+  --transition:    all 0.22s ease;
 }
 
+/* ── Base ──────────────────────────────────────────────────────────────────── */
+* { font-family: 'Inter', sans-serif; }
+
+body {
+  background: var(--bg);
+  color: #1f2937;
+  font-size: 0.925rem;
+}
+
+/* ── Navbar admin ──────────────────────────────────────────────────────────── */
+.navbar-admin {
+  background: var(--dark);
+  padding: 0.65rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+.navbar-admin .navbar-brand {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff !important;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  letter-spacing: -0.01em;
+}
+
+.brand-icon {
+  width: 32px; height: 32px;
+  background: var(--primary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.navbar-admin .nav-link {
+  color: rgba(255,255,255,.6) !important;
+  font-size: 0.845rem;
+  font-weight: 500;
+  padding: 0.38rem 0.75rem !important;
+  border-radius: 6px;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.navbar-admin .nav-link:hover,
+.navbar-admin .nav-link.active {
+  color: #fff !important;
+  background: rgba(255,255,255,.09);
+}
+
+.navbar-admin .nav-link-danger {
+  color: #f87171 !important;
+}
+
+.navbar-admin .nav-link-danger:hover {
+  background: rgba(248,113,113,.12) !important;
+  color: #fca5a5 !important;
+}
+
+/* ── Cards ─────────────────────────────────────────────────────────────────── */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  background: #fff;
+}
+
+.card-header {
+  background: #fff !important;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0 !important;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+/* ── Stat cards ────────────────────────────────────────────────────────────── */
+.stat-card {
+  border-radius: var(--radius);
+  padding: 1.4rem 1.5rem;
+  color: #fff;
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  right: -18px; bottom: -18px;
+  width: 90px; height: 90px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  right: 20px; bottom: -35px;
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+}
+
+.stat-card .stat-icon {
+  font-size: 1.75rem;
+  opacity: .9;
+}
+
+.stat-card .stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0.35rem 0 0.2rem;
+}
+
+.stat-card .stat-label {
+  font-size: 0.8rem;
+  opacity: .8;
+  font-weight: 500;
+}
+
+.stat-blue   { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+.stat-green  { background: linear-gradient(135deg, #059669, #10b981); }
+.stat-amber  { background: linear-gradient(135deg, #d97706, #f59e0b); }
+.stat-purple { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+.stat-red    { background: linear-gradient(135deg, #dc2626, #ef4444); }
+
+/* ── Botões ─────────────────────────────────────────────────────────────────── */
+.btn {
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(37,99,235,.35);
+}
+
+.btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(5,150,105,.35);
+}
+
+.btn-danger:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(220,38,38,.3);
+}
+
+.btn-outline-primary:hover { transform: translateY(-1px); }
+.btn-outline-danger:hover  { transform: translateY(-1px); }
+
+/* ── Tabelas ────────────────────────────────────────────────────────────────── */
+.table {
+  font-size: 0.875rem;
+}
+
+.table thead th {
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--gray);
+  background: #f9fafb;
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem;
+}
+
+.table tbody td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: middle;
+}
+
+.table-hover tbody tr:hover {
+  background: #fafbff;
+}
+
+/* ── Formulários ────────────────────────────────────────────────────────────── */
+.form-control, .form-select {
+  border-radius: var(--radius-sm);
+  border-color: var(--border);
+  font-size: 0.875rem;
+  padding: 0.55rem 0.85rem;
+  transition: var(--transition);
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+.form-label {
+  font-weight: 500;
+  font-size: 0.825rem;
+  color: #374151;
+  margin-bottom: 0.35rem;
+}
+
+/* ── Alerts ─────────────────────────────────────────────────────────────────── */
+.alert {
+  border-radius: 10px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.alert-success { background: #ecfdf5; color: #065f46; }
+.alert-danger  { background: #fef2f2; color: #991b1b; }
+.alert-warning { background: #fffbeb; color: #92400e; }
+.alert-info    { background: #eff6ff; color: #1e40af; }
+
+/* ── Badges ─────────────────────────────────────────────────────────────────── */
+.badge {
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.72rem;
+  padding: 0.35em 0.65em;
+}
+
+/* ── Card de candidato (votação) ─────────────────────────────────────────────── */
 .candidato-card {
-    cursor: pointer;
-    transition: background-color 0.2s;
+  cursor: pointer;
+  border-radius: 12px !important;
+  border: 2px solid var(--border) !important;
+  transition: var(--transition);
+  background: #fff;
+  padding: 1rem 1.25rem !important;
 }
 
 .candidato-card:hover {
-    background-color: #e8f4ff;
+  border-color: var(--primary) !important;
+  background: var(--primary-light) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37,99,235,.13);
 }
 
-.candidato-card input[type="radio"]:checked + label {
-    color: #0d6efd;
+.candidato-card:has(input[type="radio"]:checked) {
+  border-color: var(--primary) !important;
+  background: var(--primary-light) !important;
+  box-shadow: 0 0 0 4px rgba(37,99,235,.1);
+}
+
+/* ── Barra de progresso ──────────────────────────────────────────────────────── */
+.progress {
+  border-radius: 50px;
+  background: #e5e7eb;
+  height: 22px;
+}
+
+.progress-bar {
+  border-radius: 50px;
+  background: linear-gradient(90deg, var(--primary), #6366f1);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* ── Animação de entrada ──────────────────────────────────────────────────────── */
+.container > * {
+  animation: fadeUp .3s ease both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Seção hero (home) ───────────────────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #1d4ed8 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  margin: -1.5rem -12px 0;
+  padding: 3rem 1rem;
+}
+
+.hero-card {
+  border-radius: 16px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.hero-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(37,99,235,.2);
+}
+
+/* ── Quick action buttons (dashboard) ───────────────────────────────────────── */
+.quick-btn {
+  border-radius: 12px;
+  padding: 1.1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: var(--transition);
+}
+
+.quick-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* ── Impressão ───────────────────────────────────────────────────────────────── */
+@media print {
+  body { background: #fff; }
+  .card { box-shadow: none !important; border: 1px solid #d1d5db !important; }
+  .table-success td { background-color: #d1fae5 !important; -webkit-print-color-adjust: exact; }
 }

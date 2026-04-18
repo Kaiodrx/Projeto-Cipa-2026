@@ -63,6 +63,7 @@ class Voto(db.Model):
 
 class Eleicao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    unidade = db.Column(db.String(50), nullable=True)
     status = db.Column(db.String(20), default='fechada')
 
 
@@ -86,6 +87,7 @@ def init_db():
             "ALTER TABLE candidato ADD COLUMN foto TEXT",
             "ALTER TABLE candidato ADD COLUMN unidade VARCHAR(50)",
             "ALTER TABLE funcionario ADD COLUMN unidade VARCHAR(50)",
+            "ALTER TABLE eleicao ADD COLUMN unidade VARCHAR(50)",
         ]:
             try:
                 conn.execute(db.text(sql))
@@ -97,8 +99,11 @@ def init_db():
             username='admin',
             password=generate_password_hash('cipa2026')
         ))
-        db.session.add(Eleicao(status='fechada'))
         db.session.commit()
+    for unidade in UNIDADES:
+        if not Eleicao.query.filter_by(unidade=unidade).first():
+            db.session.add(Eleicao(unidade=unidade, status='fechada'))
+    db.session.commit()
 
 
 # ── Autenticação admin ─────────────────────────────────────────────────────────
@@ -127,12 +132,14 @@ def logout_admin():
 @app.route('/admin')
 @login_required
 def dashboard():
-    eleicao = Eleicao.query.first()
+    eleicoes = {e.unidade: e for e in Eleicao.query.all()}
+    abertas = sum(1 for e in eleicoes.values() if e.status == 'aberta')
     return render_template('admin/dashboard.html',
                            total_candidatos=Candidato.query.count(),
                            total_funcionarios=Funcionario.query.count(),
                            total_votos=Voto.query.count(),
-                           eleicao=eleicao,
+                           unidades_abertas=abertas,
+                           total_unidades=len(UNIDADES),
                            unidades=UNIDADES)
 
 
@@ -239,37 +246,53 @@ def remover_funcionario(id):
 @app.route('/admin/eleicao')
 @login_required
 def gerenciar_eleicao():
-    eleicao = Eleicao.query.first()
-    candidatos_por_unidade = {
-        u: Candidato.query.filter_by(unidade=u).all() for u in UNIDADES
-    }
-    funcionarios_por_unidade = {
-        u: Funcionario.query.filter_by(unidade=u).count() for u in UNIDADES
-    }
+    eleicoes = {e.unidade: e for e in Eleicao.query.all()}
+    candidatos_por_unidade = {u: Candidato.query.filter_by(unidade=u).all() for u in UNIDADES}
+    funcionarios_por_unidade = {u: Funcionario.query.filter_by(unidade=u).count() for u in UNIDADES}
     return render_template('admin/eleicao.html',
-                           eleicao=eleicao,
+                           eleicoes=eleicoes,
                            candidatos_por_unidade=candidatos_por_unidade,
                            funcionarios_por_unidade=funcionarios_por_unidade,
                            unidades=UNIDADES)
 
 
-@app.route('/admin/eleicao/abrir')
+@app.route('/admin/eleicao/abrir-todas')
 @login_required
-def abrir_eleicao():
-    eleicao = Eleicao.query.first()
-    eleicao.status = 'aberta'
+def abrir_todas():
+    for e in Eleicao.query.all():
+        e.status = 'aberta'
     db.session.commit()
-    flash('Eleição aberta com sucesso!', 'success')
+    flash('Todas as unidades foram abertas!', 'success')
     return redirect(url_for('gerenciar_eleicao'))
 
 
-@app.route('/admin/eleicao/fechar')
+@app.route('/admin/eleicao/fechar-todas')
 @login_required
-def fechar_eleicao():
-    eleicao = Eleicao.query.first()
+def fechar_todas():
+    for e in Eleicao.query.all():
+        e.status = 'fechada'
+    db.session.commit()
+    flash('Todas as unidades foram encerradas.', 'warning')
+    return redirect(url_for('gerenciar_eleicao'))
+
+
+@app.route('/admin/eleicao/<unidade>/abrir')
+@login_required
+def abrir_eleicao(unidade):
+    eleicao = Eleicao.query.filter_by(unidade=unidade).first_or_404()
+    eleicao.status = 'aberta'
+    db.session.commit()
+    flash(f'{unidade} — eleição aberta!', 'success')
+    return redirect(url_for('gerenciar_eleicao'))
+
+
+@app.route('/admin/eleicao/<unidade>/fechar')
+@login_required
+def fechar_eleicao(unidade):
+    eleicao = Eleicao.query.filter_by(unidade=unidade).first_or_404()
     eleicao.status = 'fechada'
     db.session.commit()
-    flash('Eleição encerrada.', 'warning')
+    flash(f'{unidade} — eleição encerrada.', 'warning')
     return redirect(url_for('gerenciar_eleicao'))
 
 
@@ -309,34 +332,34 @@ def home():
 
 @app.route('/votacao', methods=['GET', 'POST'])
 def login_votacao():
-    eleicao = Eleicao.query.first()
     if request.method == 'POST':
         matricula = request.form['matricula'].strip()
         unidade = request.form['unidade'].strip()
         funcionario = Funcionario.query.filter_by(matricula=matricula).first()
+        eleicao = Eleicao.query.filter_by(unidade=unidade).first()
         if not funcionario:
             flash('Matrícula não encontrada.', 'danger')
         elif funcionario.unidade != unidade:
             flash('Unidade incorreta para esta matrícula.', 'danger')
         elif funcionario.votou:
             flash('Você já votou nesta eleição.', 'warning')
-        elif eleicao.status != 'aberta':
-            flash('A eleição não está aberta no momento.', 'warning')
+        elif not eleicao or eleicao.status != 'aberta':
+            flash('A eleição desta unidade não está aberta no momento.', 'warning')
         else:
             session['funcionario_id'] = funcionario.id
             return redirect(url_for('votar'))
-    return render_template('votacao/login.html', eleicao=eleicao, unidades=UNIDADES)
+    return render_template('votacao/login.html', unidades=UNIDADES)
 
 
 @app.route('/votar', methods=['GET', 'POST'])
 def votar():
     if 'funcionario_id' not in session:
         return redirect(url_for('login_votacao'))
-    eleicao = Eleicao.query.first()
-    if eleicao.status != 'aberta':
-        flash('A eleição não está aberta.', 'warning')
-        return redirect(url_for('login_votacao'))
     funcionario = Funcionario.query.get(session['funcionario_id'])
+    eleicao = Eleicao.query.filter_by(unidade=funcionario.unidade).first()
+    if not eleicao or eleicao.status != 'aberta':
+        flash('A eleição desta unidade não está aberta.', 'warning')
+        return redirect(url_for('login_votacao'))
     if funcionario.votou:
         session.pop('funcionario_id', None)
         flash('Você já votou.', 'warning')

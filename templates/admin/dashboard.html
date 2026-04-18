@@ -37,12 +37,10 @@
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="stat-card {{ 'stat-green' if eleicao.status == 'aberta' else 'stat-red' }}">
+        <div class="stat-card {{ 'stat-green' if unidades_abertas > 0 else 'stat-red' }}">
             <div class="stat-icon"><i class="bi bi-ballot"></i></div>
-            <div class="stat-value" style="font-size:1.4rem;margin-top:.5rem;">
-                {{ eleicao.status | capitalize }}
-            </div>
-            <div class="stat-label">Status da Eleição</div>
+            <div class="stat-value">{{ unidades_abertas }}/{{ total_unidades }}</div>
+            <div class="stat-label">Unidades Abertas</div>
         </div>
     </div>
 </div>

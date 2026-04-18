@@ -28,9 +28,10 @@ body {
 
 /* ── Navbar admin ──────────────────────────────────────────────────────────── */
 .navbar-admin {
-  background: var(--dark);
+  background: linear-gradient(135deg, #006b2b 0%, #00AA44 100%);
   padding: 0.65rem 0;
-  border-bottom: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(0,0,0,.1);
+  box-shadow: 0 2px 12px rgba(0,0,0,.15);
 }
 
 .navbar-admin .navbar-brand {
@@ -145,10 +146,10 @@ body {
   font-weight: 500;
 }
 
-.stat-blue   { background: linear-gradient(135deg, #2563eb, #3b82f6); }
-.stat-green  { background: linear-gradient(135deg, #059669, #10b981); }
-.stat-amber  { background: linear-gradient(135deg, #d97706, #f59e0b); }
-.stat-purple { background: linear-gradient(135deg, #7c3aed, #8b5cf6); }
+.stat-blue   { background: linear-gradient(135deg, #002a80, #003399); }
+.stat-green  { background: linear-gradient(135deg, #006b2b, #00AA44); }
+.stat-amber  { background: linear-gradient(135deg, #c97000, #F7941D); }
+.stat-purple { background: linear-gradient(135deg, #006b2b, #00AA44); }
 .stat-red    { background: linear-gradient(135deg, #dc2626, #ef4444); }
 
 /* ── Botões ─────────────────────────────────────────────────────────────────── */

@@ -1,48 +1,68 @@
 {% extends 'base.html' %}
-{% block title %}Votação{% endblock %}
+{% block title %}Votação — CIPA 2026{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center mt-4">
-    <div class="col-md-7">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white text-center py-3">
-                <h4 class="mb-0"><i class="bi bi-ballot-heart"></i> Escolha seu candidato</h4>
-                <small>Olá, <strong>{{ funcionario.nome }}</strong>! Você pode votar em apenas um candidato.</small>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    {% for c in candidatos %}
-                    <div class="form-check candidato-card border rounded p-3 mb-3">
-                        <input class="form-check-input" type="radio" name="candidato_id"
-                               id="c{{ c.id }}" value="{{ c.id }}" required>
-                        <label class="form-check-label w-100 d-flex align-items-center gap-3" for="c{{ c.id }}">
-                            {% if c.foto %}
-                            <img src="{{ c.foto }}"
-                                 class="rounded-circle" style="width:64px;height:64px;object-fit:cover;"
-                                 alt="{{ c.nome }}">
-                            {% else %}
-                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center flex-shrink-0"
-                                 style="width:64px;height:64px;">
-                                <i class="bi bi-person-fill text-white" style="font-size:2rem;"></i>
-                            </div>
-                            {% endif %}
-                            <div>
-                                <strong class="fs-5">{{ c.nome }}</strong>
-                                <span class="text-muted d-block">{{ c.cargo }}</span>
-                            </div>
-                        </label>
-                    </div>
-                    {% endfor %}
+<div class="row justify-content-center mt-3">
+    <div class="col-lg-6 col-md-8">
 
-                    <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-success btn-lg"
-                                onclick="return confirm('Confirmar seu voto? Esta ação não pode ser desfeita.')">
-                            <i class="bi bi-check2-circle"></i> Confirmar Voto
-                        </button>
-                    </div>
-                </form>
+        <div class="card mb-3" style="background:linear-gradient(135deg,#1e3a5f,#2563eb);border:none;">
+            <div class="card-body py-4 text-white text-center">
+                <i class="bi bi-ballot-heart mb-2" style="font-size:1.75rem;opacity:.85;"></i>
+                <h5 class="fw-bold mb-1">Escolha seu candidato</h5>
+                <p class="mb-0" style="font-size:.85rem;opacity:.8;">
+                    Olá, <strong>{{ funcionario.nome }}</strong>! Selecione apenas um candidato.
+                </p>
             </div>
         </div>
+
+        <form method="POST">
+            {% for c in candidatos %}
+            <div class="form-check candidato-card mb-3">
+                <input class="form-check-input d-none" type="radio" name="candidato_id"
+                       id="c{{ c.id }}" value="{{ c.id }}" required>
+                <label class="form-check-label w-100 d-flex align-items-center gap-3" for="c{{ c.id }}">
+                    {% if c.foto %}
+                    <img src="{{ c.foto }}" class="rounded-circle flex-shrink-0"
+                         style="width:60px;height:60px;object-fit:cover;border:2px solid #e5e7eb;">
+                    {% else %}
+                    <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center"
+                         style="width:60px;height:60px;background:#e5e7eb;border:2px solid #d1d5db;">
+                        <i class="bi bi-person-fill text-secondary" style="font-size:1.5rem;"></i>
+                    </div>
+                    {% endif %}
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold" style="font-size:1rem;">{{ c.nome }}</div>
+                        <div class="text-muted" style="font-size:.825rem;">{{ c.cargo }}</div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="rounded-circle border d-flex align-items-center justify-content-center"
+                             style="width:22px;height:22px;border-color:#d1d5db;">
+                            <i class="bi bi-check2 text-primary select-check" style="font-size:.75rem;display:none;"></i>
+                        </div>
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+
+            <div class="d-grid mt-4 mb-5">
+                <button type="submit" class="btn btn-success btn-lg py-3"
+                        onclick="return confirm('Confirmar seu voto? Esta ação não pode ser desfeita.')">
+                    <i class="bi bi-check2-circle"></i> Confirmar Voto
+                </button>
+            </div>
+        </form>
+
     </div>
 </div>
+
+<script>
+document.querySelectorAll('.candidato-card input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.querySelectorAll('.select-check').forEach(el => el.style.display = 'none');
+        if (radio.checked) {
+            radio.closest('.candidato-card').querySelector('.select-check').style.display = 'block';
+        }
+    });
+});
+</script>
 {% endblock %}

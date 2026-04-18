@@ -10,9 +10,19 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'cipa2026_chave_secreta')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///cipa.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # limite de 5MB por upload
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
+
+UNIDADES = [
+    'UTD SOBRADINHO',
+    'UTD PLANALTINA',
+    'UTD SIA',
+    'SEDE PARK SHOPPING',
+    'UTD TAGUATINGA',
+    'UTD LAGO SUL',
+    'UTD SÃO SEBASTIÃO',
+]
 
 db = SQLAlchemy(app)
 
@@ -33,7 +43,8 @@ class Candidato(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
     cargo = db.Column(db.String(100), nullable=False)
-    foto = db.Column(db.Text, nullable=True)  # armazena a imagem em base64
+    unidade = db.Column(db.String(50), nullable=True)
+    foto = db.Column(db.Text, nullable=True)
     votos = db.relationship('Voto', backref='candidato', lazy=True)
 
 
@@ -41,6 +52,7 @@ class Funcionario(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     matricula = db.Column(db.String(20), unique=True, nullable=False)
     nome = db.Column(db.String(100), nullable=False)
+    unidade = db.Column(db.String(50), nullable=True)
     votou = db.Column(db.Boolean, default=False)
 
 
@@ -70,11 +82,16 @@ def login_required(f):
 def init_db():
     db.create_all()
     with db.engine.connect() as conn:
-        try:
-            conn.execute(db.text("ALTER TABLE candidato ADD COLUMN foto TEXT"))
-            conn.commit()
-        except Exception:
-            pass
+        for sql in [
+            "ALTER TABLE candidato ADD COLUMN foto TEXT",
+            "ALTER TABLE candidato ADD COLUMN unidade VARCHAR(50)",
+            "ALTER TABLE funcionario ADD COLUMN unidade VARCHAR(50)",
+        ]:
+            try:
+                conn.execute(db.text(sql))
+                conn.commit()
+            except Exception:
+                pass
     if not Admin.query.first():
         db.session.add(Admin(
             username='admin',
@@ -115,7 +132,8 @@ def dashboard():
                            total_candidatos=Candidato.query.count(),
                            total_funcionarios=Funcionario.query.count(),
                            total_votos=Voto.query.count(),
-                           eleicao=eleicao)
+                           eleicao=eleicao,
+                           unidades=UNIDADES)
 
 
 # ── Candidatos ─────────────────────────────────────────────────────────────────
@@ -123,7 +141,9 @@ def dashboard():
 @app.route('/admin/candidatos')
 @login_required
 def candidatos():
-    return render_template('admin/candidatos.html', candidatos=Candidato.query.all())
+    return render_template('admin/candidatos.html',
+                           candidatos=Candidato.query.order_by(Candidato.unidade, Candidato.nome).all(),
+                           unidades=UNIDADES)
 
 
 @app.route('/admin/candidatos/adicionar', methods=['POST'])
@@ -131,15 +151,16 @@ def candidatos():
 def adicionar_candidato():
     nome = request.form['nome'].strip()
     cargo = request.form['cargo'].strip()
-    if nome and cargo:
-        candidato = Candidato(nome=nome, cargo=cargo)
+    unidade = request.form['unidade'].strip()
+    if nome and cargo and unidade:
+        candidato = Candidato(nome=nome, cargo=cargo, unidade=unidade)
         db.session.add(candidato)
         db.session.flush()
         file = request.files.get('foto')
         if file and file.filename and allowed_file(file.filename):
             candidato.foto = _foto_para_base64(file)
         db.session.commit()
-        flash('Candidato adicionado com sucesso!', 'success')
+        flash(f'Candidato adicionado em {unidade}!', 'success')
     return redirect(url_for('candidatos'))
 
 
@@ -182,7 +203,9 @@ def remover_candidato(id):
 @app.route('/admin/funcionarios')
 @login_required
 def funcionarios():
-    return render_template('admin/funcionarios.html', funcionarios=Funcionario.query.all())
+    return render_template('admin/funcionarios.html',
+                           funcionarios=Funcionario.query.order_by(Funcionario.unidade, Funcionario.nome).all(),
+                           unidades=UNIDADES)
 
 
 @app.route('/admin/funcionarios/adicionar', methods=['POST'])
@@ -190,13 +213,14 @@ def funcionarios():
 def adicionar_funcionario():
     matricula = request.form['matricula'].strip()
     nome = request.form['nome'].strip()
-    if matricula and nome:
+    unidade = request.form['unidade'].strip()
+    if matricula and nome and unidade:
         if Funcionario.query.filter_by(matricula=matricula).first():
             flash('Matrícula já cadastrada.', 'danger')
         else:
-            db.session.add(Funcionario(matricula=matricula, nome=nome))
+            db.session.add(Funcionario(matricula=matricula, nome=nome, unidade=unidade))
             db.session.commit()
-            flash('Funcionário adicionado com sucesso!', 'success')
+            flash(f'Funcionário adicionado em {unidade}!', 'success')
     return redirect(url_for('funcionarios'))
 
 
@@ -243,12 +267,25 @@ def fechar_eleicao():
 @app.route('/admin/resultado')
 @login_required
 def resultado():
-    lista = Candidato.query.all()
-    dados = sorted([(c, len(c.votos)) for c in lista], key=lambda x: x[1], reverse=True)
+    resultado_por_unidade = {}
+    for unidade in UNIDADES:
+        candidatos_u = Candidato.query.filter_by(unidade=unidade).all()
+        dados = sorted([(c, len(c.votos)) for c in candidatos_u], key=lambda x: x[1], reverse=True)
+        total = sum(v for _, v in dados)
+        votos_unidade = Funcionario.query.filter_by(unidade=unidade, votou=True).count()
+        total_func = Funcionario.query.filter_by(unidade=unidade).count()
+        resultado_por_unidade[unidade] = {
+            'dados': dados,
+            'total_votos': total,
+            'votaram': votos_unidade,
+            'total_funcionarios': total_func,
+        }
     now = datetime.now().strftime('%d/%m/%Y às %H:%M')
+    total_votos_geral = Voto.query.count()
     return render_template('admin/resultado.html',
-                           dados=dados,
-                           total_votos=Voto.query.count(),
+                           resultado_por_unidade=resultado_por_unidade,
+                           total_votos_geral=total_votos_geral,
+                           unidades=UNIDADES,
                            now=now)
 
 
@@ -264,9 +301,12 @@ def login_votacao():
     eleicao = Eleicao.query.first()
     if request.method == 'POST':
         matricula = request.form['matricula'].strip()
+        unidade = request.form['unidade'].strip()
         funcionario = Funcionario.query.filter_by(matricula=matricula).first()
         if not funcionario:
             flash('Matrícula não encontrada.', 'danger')
+        elif funcionario.unidade != unidade:
+            flash('Unidade incorreta para esta matrícula.', 'danger')
         elif funcionario.votou:
             flash('Você já votou nesta eleição.', 'warning')
         elif eleicao.status != 'aberta':
@@ -274,7 +314,7 @@ def login_votacao():
         else:
             session['funcionario_id'] = funcionario.id
             return redirect(url_for('votar'))
-    return render_template('votacao/login.html', eleicao=eleicao, url_home=url_for('home'))
+    return render_template('votacao/login.html', eleicao=eleicao, unidades=UNIDADES)
 
 
 @app.route('/votar', methods=['GET', 'POST'])
@@ -297,10 +337,10 @@ def votar():
             funcionario.votou = True
             db.session.commit()
             session.pop('funcionario_id', None)
-            flash('Voto registrado com sucesso!', 'success')
             return redirect(url_for('confirmacao'))
+    candidatos = Candidato.query.filter_by(unidade=funcionario.unidade).all()
     return render_template('votacao/votar.html',
-                           candidatos=Candidato.query.all(),
+                           candidatos=candidatos,
                            funcionario=funcionario)
 
 

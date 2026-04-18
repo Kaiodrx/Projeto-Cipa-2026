@@ -239,7 +239,18 @@ def remover_funcionario(id):
 @app.route('/admin/eleicao')
 @login_required
 def gerenciar_eleicao():
-    return render_template('admin/eleicao.html', eleicao=Eleicao.query.first())
+    eleicao = Eleicao.query.first()
+    candidatos_por_unidade = {
+        u: Candidato.query.filter_by(unidade=u).all() for u in UNIDADES
+    }
+    funcionarios_por_unidade = {
+        u: Funcionario.query.filter_by(unidade=u).count() for u in UNIDADES
+    }
+    return render_template('admin/eleicao.html',
+                           eleicao=eleicao,
+                           candidatos_por_unidade=candidatos_por_unidade,
+                           funcionarios_por_unidade=funcionarios_por_unidade,
+                           unidades=UNIDADES)
 
 
 @app.route('/admin/eleicao/abrir')

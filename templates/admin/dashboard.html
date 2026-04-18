@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Painel Admin{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <i class="bi bi-shield-check"></i> CIPA 2026 — Admin
+        </a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="{{ url_for('candidatos') }}"><i class="bi bi-people"></i> Candidatos</a>
+            <a class="nav-link" href="{{ url_for('funcionarios') }}"><i class="bi bi-person-badge"></i> Funcionários</a>
+            <a class="nav-link" href="{{ url_for('gerenciar_eleicao') }}"><i class="bi bi-ballot"></i> Eleição</a>
+            <a class="nav-link" href="{{ url_for('resultado') }}"><i class="bi bi-bar-chart"></i> Resultado</a>
+            <a class="nav-link text-warning" href="{{ url_for('logout_admin') }}"><i class="bi bi-box-arrow-right"></i> Sair</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h3 class="mb-4">Painel de Controle</h3>
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary shadow">
+            <div class="card-body text-center">
+                <i class="bi bi-people fs-2"></i>
+                <h2 class="mt-2">{{ total_candidatos }}</h2>
+                <p class="mb-0">Candidatos</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-success shadow">
+            <div class="card-body text-center">
+                <i class="bi bi-person-badge fs-2"></i>
+                <h2 class="mt-2">{{ total_funcionarios }}</h2>
+                <p class="mb-0">Funcionários</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white bg-warning shadow">
+            <div class="card-body text-center">
+                <i class="bi bi-check2-square fs-2"></i>
+                <h2 class="mt-2">{{ total_votos }}</h2>
+                <p class="mb-0">Votos Registrados</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-white shadow {{ 'bg-danger' if eleicao.status == 'fechada' else 'bg-info' }}">
+            <div class="card-body text-center">
+                <i class="bi bi-ballot fs-2"></i>
+                <h2 class="mt-2">{{ eleicao.status | capitalize }}</h2>
+                <p class="mb-0">Status da Eleição</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4 g-3">
+    <div class="col-md-3">
+        <a href="{{ url_for('candidatos') }}" class="btn btn-outline-primary w-100 py-3">
+            <i class="bi bi-person-plus"></i> Gerenciar Candidatos
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('funcionarios') }}" class="btn btn-outline-success w-100 py-3">
+            <i class="bi bi-people"></i> Gerenciar Funcionários
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('gerenciar_eleicao') }}" class="btn btn-outline-warning w-100 py-3">
+            <i class="bi bi-toggle-on"></i> Controlar Eleição
+        </a>
+    </div>
+    <div class="col-md-3">
+        <a href="{{ url_for('resultado') }}" class="btn btn-outline-info w-100 py-3">
+            <i class="bi bi-bar-chart-line"></i> Ver Resultado
+        </a>
+    </div>
+</div>
+{% endblock %}

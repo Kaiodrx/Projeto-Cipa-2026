@@ -1,0 +1,16 @@
+body {
+    background-color: #f4f6f9;
+}
+
+.candidato-card {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.candidato-card:hover {
+    background-color: #e8f4ff;
+}
+
+.candidato-card input[type="radio"]:checked + label {
+    color: #0d6efd;
+}

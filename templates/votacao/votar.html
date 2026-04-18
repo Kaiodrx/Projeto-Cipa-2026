@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}Votação{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-7">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0"><i class="bi bi-ballot-heart"></i> Escolha seu candidato</h4>
+                <small>Olá, <strong>{{ funcionario.nome }}</strong>! Você pode votar em apenas um candidato.</small>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% for c in candidatos %}
+                    <div class="form-check candidato-card border rounded p-3 mb-3">
+                        <input class="form-check-input" type="radio" name="candidato_id"
+                               id="c{{ c.id }}" value="{{ c.id }}" required>
+                        <label class="form-check-label w-100 d-flex align-items-center gap-3" for="c{{ c.id }}">
+                            {% if c.foto %}
+                            <img src="{{ c.foto }}"
+                                 class="rounded-circle" style="width:64px;height:64px;object-fit:cover;"
+                                 alt="{{ c.nome }}">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center flex-shrink-0"
+                                 style="width:64px;height:64px;">
+                                <i class="bi bi-person-fill text-white" style="font-size:2rem;"></i>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <strong class="fs-5">{{ c.nome }}</strong>
+                                <span class="text-muted d-block">{{ c.cargo }}</span>
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-success btn-lg"
+                                onclick="return confirm('Confirmar seu voto? Esta ação não pode ser desfeita.')">
+                            <i class="bi bi-check2-circle"></i> Confirmar Voto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block title %}Candidatos{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <i class="bi bi-shield-check"></i> CIPA 2026 — Admin
+        </a>
+        <div class="navbar-nav ms-auto">
+            <a class="nav-link" href="{{ url_for('candidatos') }}"><i class="bi bi-people"></i> Candidatos</a>
+            <a class="nav-link" href="{{ url_for('funcionarios') }}"><i class="bi bi-person-badge"></i> Funcionários</a>
+            <a class="nav-link" href="{{ url_for('gerenciar_eleicao') }}"><i class="bi bi-ballot"></i> Eleição</a>
+            <a class="nav-link" href="{{ url_for('resultado') }}"><i class="bi bi-bar-chart"></i> Resultado</a>
+            <a class="nav-link text-warning" href="{{ url_for('logout_admin') }}"><i class="bi bi-box-arrow-right"></i> Sair</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<h3 class="mb-4"><i class="bi bi-people"></i> Candidatos</h3>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-light"><strong>Adicionar novo candidato</strong></div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('adicionar_candidato') }}" enctype="multipart/form-data" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label">Nome completo</label>
+                <input type="text" name="nome" class="form-control" placeholder="Nome completo" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Cargo / Setor</label>
+                <input type="text" name="cargo" class="form-control" placeholder="Cargo / Setor" required>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Foto (opcional)</label>
+                <input type="file" name="foto" class="form-control" accept="image/*">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-person-plus"></i> Adicionar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-light"><strong>Lista de Candidatos ({{ candidatos|length }})</strong></div>
+    <div class="card-body p-0">
+        {% if candidatos %}
+        <table class="table table-hover mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th style="width:70px">Foto</th>
+                    <th>Nome</th>
+                    <th>Cargo / Setor</th>
+                    <th>Alterar Foto</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in candidatos %}
+                <tr>
+                    <td>
+                        {% if c.foto %}
+                        <img src="{{ c.foto }}"
+                             class="rounded-circle" style="width:50px;height:50px;object-fit:cover;"
+                             alt="{{ c.nome }}">
+                        {% else %}
+                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
+                             style="width:50px;height:50px;">
+                            <i class="bi bi-person-fill text-white fs-4"></i>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ c.nome }}</strong></td>
+                    <td>{{ c.cargo }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('upload_foto', id=c.id) }}"
+                              enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                            <input type="file" name="foto" class="form-control form-control-sm" accept="image/*" required style="max-width:200px">
+                            <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
+                                <i class="bi bi-upload"></i> Enviar
+                            </button>
+                        </form>
+                    </td>
+                    <td>
+                        <a href="{{ url_for('remover_candidato', id=c.id) }}"
+                           class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('Remover {{ c.nome }}?')">
+                            <i class="bi bi-trash"></i> Remover
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-muted text-center py-4">Nenhum candidato cadastrado ainda.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

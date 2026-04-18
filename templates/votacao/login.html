@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Eleição CIPA 2026{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-body p-5 text-center">
+                <i class="bi bi-ballot-heart fs-1 text-primary"></i>
+                <h3 class="mt-3">Eleição CIPA 2026</h3>
+                <p class="text-muted">Digite sua matrícula para votar</p>
+
+                {% if eleicao.status != 'aberta' %}
+                <div class="alert alert-warning">
+                    <i class="bi bi-clock"></i> A eleição ainda não está aberta.
+                </div>
+                {% else %}
+                <form method="POST" class="mt-3">
+                    <div class="mb-3">
+                        <input type="text" name="matricula" class="form-control form-control-lg text-center"
+                               placeholder="Ex: 00123" required autofocus>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-arrow-right-circle"></i> Acessar
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -174,10 +174,9 @@ def candidatos():
 @login_required
 def adicionar_candidato():
     nome = request.form['nome'].strip()
-    cargo = request.form['cargo'].strip()
     unidade = request.form['unidade'].strip()
-    if nome and cargo and unidade:
-        candidato = Candidato(nome=nome, cargo=cargo, unidade=unidade)
+    if nome and unidade:
+        candidato = Candidato(nome=nome, cargo='', unidade=unidade)
         db.session.add(candidato)
         db.session.flush()
         file = request.files.get('foto')

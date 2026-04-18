@@ -60,7 +60,6 @@
                     <th style="width:55px;">Pos.</th>
                     <th style="width:55px;" class="d-print-none">Foto</th>
                     <th>Candidato</th>
-                    <th>Cargo / Setor</th>
                     <th style="width:70px;">Votos</th>
                     <th style="width:200px;">Percentual</th>
                 </tr>
@@ -88,7 +87,6 @@
                         {% endif %}
                     </td>
                     <td><span class="fw-semibold">{{ candidato.nome }}</span></td>
-                    <td><span class="text-muted">{{ candidato.cargo }}</span></td>
                     <td class="text-center fw-bold">{{ votos }}</td>
                     <td>
                         {% if dados_u.total_votos > 0 %}

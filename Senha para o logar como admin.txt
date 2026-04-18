@@ -1,0 +1,5 @@
+Senha para o logar como admin no projeto
+
+login: admin
+senha: cipa2026
+

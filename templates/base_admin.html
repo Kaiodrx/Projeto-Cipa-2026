@@ -26,6 +26,10 @@
                    href="{{ url_for('gerenciar_eleicao') }}">
                     <i class="bi bi-ballot"></i> Eleição
                 </a>
+                <a class="nav-link {% if request.endpoint == 'participacao' %}active{% endif %}"
+                   href="{{ url_for('participacao') }}">
+                    <i class="bi bi-person-check"></i> Participação
+                </a>
                 <a class="nav-link {% if request.endpoint == 'resultado' %}active{% endif %}"
                    href="{{ url_for('resultado') }}">
                     <i class="bi bi-bar-chart"></i> Resultado

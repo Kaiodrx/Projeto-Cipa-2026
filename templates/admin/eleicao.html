@@ -1,49 +1,56 @@
-{% extends 'base.html' %}
-{% block title %}Controle da Eleição{% endblock %}
+{% extends 'base_admin.html' %}
+{% block title %}Controle da Eleição — CIPA 2026{% endblock %}
 
-{% block navbar %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
-            <i class="bi bi-shield-check"></i> CIPA 2026 — Admin
-        </a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="{{ url_for('candidatos') }}"><i class="bi bi-people"></i> Candidatos</a>
-            <a class="nav-link" href="{{ url_for('funcionarios') }}"><i class="bi bi-person-badge"></i> Funcionários</a>
-            <a class="nav-link" href="{{ url_for('gerenciar_eleicao') }}"><i class="bi bi-ballot"></i> Eleição</a>
-            <a class="nav-link" href="{{ url_for('resultado') }}"><i class="bi bi-bar-chart"></i> Resultado</a>
-            <a class="nav-link text-warning" href="{{ url_for('logout_admin') }}"><i class="bi bi-box-arrow-right"></i> Sair</a>
-        </div>
+{% block admin_content %}
+<div class="d-flex align-items-center mb-4">
+    <div>
+        <h4 class="fw-bold mb-0">Controle da Eleição</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Abra ou encerre a votação</p>
     </div>
-</nav>
-{% endblock %}
+</div>
 
-{% block content %}
-<h3 class="mb-4"><i class="bi bi-ballot"></i> Controle da Eleição</h3>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body text-center py-5 px-4">
 
-<div class="card shadow col-md-6">
-    <div class="card-body text-center p-5">
-        <i class="bi bi-toggle-{{ 'on text-success' if eleicao.status == 'aberta' else 'off text-danger' }} fs-1"></i>
-        <h4 class="mt-3">
-            Status atual:
-            <span class="badge {{ 'bg-success' if eleicao.status == 'aberta' else 'bg-danger' }} fs-6">
-                {{ eleicao.status | upper }}
-            </span>
-        </h4>
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                     style="width:90px;height:90px;
+                            background:{{ '#ecfdf5' if eleicao.status == 'aberta' else '#fef2f2' }};">
+                    <i class="bi bi-{{ 'toggle-on text-success' if eleicao.status == 'aberta' else 'toggle-off text-danger' }}"
+                       style="font-size:2.5rem;"></i>
+                </div>
 
-        {% if eleicao.status == 'fechada' %}
-        <a href="{{ url_for('abrir_eleicao') }}"
-           class="btn btn-success btn-lg mt-3"
-           onclick="return confirm('Confirma abertura da eleição?')">
-            <i class="bi bi-play-circle"></i> Abrir Eleição
-        </a>
-        {% else %}
-        <a href="{{ url_for('fechar_eleicao') }}"
-           class="btn btn-danger btn-lg mt-3"
-           onclick="return confirm('Confirma encerramento da eleição?')">
-            <i class="bi bi-stop-circle"></i> Encerrar Eleição
-        </a>
-        {% endif %}
+                <h5 class="fw-bold mb-1">Status atual da eleição</h5>
+                <div class="mb-4">
+                    <span class="badge fs-6 px-3 py-2
+                        {{ 'bg-success' if eleicao.status == 'aberta' else 'bg-danger' }}">
+                        {{ eleicao.status | upper }}
+                    </span>
+                </div>
+
+                <p class="text-muted mb-4" style="font-size:.875rem;">
+                    {% if eleicao.status == 'aberta' %}
+                    A eleição está em andamento. Os funcionários podem votar agora.
+                    {% else %}
+                    A eleição está fechada. Nenhum voto pode ser registrado no momento.
+                    {% endif %}
+                </p>
+
+                {% if eleicao.status == 'fechada' %}
+                <a href="{{ url_for('abrir_eleicao') }}" class="btn btn-success btn-lg px-5"
+                   onclick="return confirm('Confirma a abertura da eleição? Os funcionários poderão votar.')">
+                    <i class="bi bi-play-circle"></i> Abrir Eleição
+                </a>
+                {% else %}
+                <a href="{{ url_for('fechar_eleicao') }}" class="btn btn-danger btn-lg px-5"
+                   onclick="return confirm('Confirma o encerramento da eleição? Nenhum voto poderá ser registrado após isso.')">
+                    <i class="bi bi-stop-circle"></i> Encerrar Eleição
+                </a>
+                {% endif %}
+
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -4,9 +4,9 @@
 <nav class="navbar navbar-expand-lg navbar-admin">
     <div class="container">
         <a class="navbar-brand" href="{{ url_for('dashboard') }}">
-            <div class="brand-icon" style="background:#F7941D;">
-                <i class="bi bi-lightning-charge-fill text-white"></i>
-            </div>
+            <img src="{{ url_for('static', filename='logo-neoenergia.png') }}"
+                 alt="Neoenergia Brasília"
+                 style="height:38px;width:38px;object-fit:contain;border-radius:8px;">
             Neoenergia Brasília
         </a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navAdmin" style="color:rgba(255,255,255,.6)">

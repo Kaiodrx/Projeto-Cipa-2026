@@ -1,121 +1,103 @@
-{% extends 'base.html' %}
-{% block title %}Resultado{% endblock %}
+{% extends 'base_admin.html' %}
+{% block title %}Resultado — CIPA 2026{% endblock %}
 
-{% block navbar %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary d-print-none">
-    <div class="container">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
-            <i class="bi bi-shield-check"></i> CIPA 2026 — Admin
-        </a>
-        <div class="navbar-nav ms-auto">
-            <a class="nav-link" href="{{ url_for('candidatos') }}"><i class="bi bi-people"></i> Candidatos</a>
-            <a class="nav-link" href="{{ url_for('funcionarios') }}"><i class="bi bi-person-badge"></i> Funcionários</a>
-            <a class="nav-link" href="{{ url_for('gerenciar_eleicao') }}"><i class="bi bi-ballot"></i> Eleição</a>
-            <a class="nav-link" href="{{ url_for('resultado') }}"><i class="bi bi-bar-chart"></i> Resultado</a>
-            <a class="nav-link text-warning" href="{{ url_for('logout_admin') }}"><i class="bi bi-box-arrow-right"></i> Sair</a>
-        </div>
-    </div>
-</nav>
-{% endblock %}
+{% block admin_content %}
 
-{% block content %}
-
-{# Cabeçalho visível apenas na impressão #}
+{# Cabeçalho de impressão #}
 <div class="d-none d-print-block text-center mb-4">
-    <h2>Resultado da Eleição CIPA 2026</h2>
+    <h2 class="fw-bold">Resultado Oficial — Eleição CIPA 2026</h2>
     <p class="text-muted">Documento gerado em: {{ now }}</p>
     <hr>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
-    <h3><i class="bi bi-bar-chart-line"></i> Resultado da Eleição</h3>
+<div class="d-flex align-items-center justify-content-between mb-4 d-print-none">
+    <div>
+        <h4 class="fw-bold mb-0">Resultado da Eleição</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Apuração dos votos em tempo real</p>
+    </div>
     <button onclick="window.print()" class="btn btn-outline-secondary">
         <i class="bi bi-printer"></i> Imprimir Relatório
     </button>
 </div>
 
-<div class="row mb-4">
+<div class="row g-3 mb-4">
     <div class="col-md-4">
-        <div class="card text-center shadow-sm">
-            <div class="card-body">
-                <i class="bi bi-check2-square fs-2 text-success"></i>
-                <h3 class="mt-2">{{ total_votos }}</h3>
-                <p class="mb-0 text-muted">Votos Registrados</p>
-            </div>
+        <div class="stat-card stat-blue">
+            <div class="stat-icon"><i class="bi bi-check2-square"></i></div>
+            <div class="stat-value">{{ total_votos }}</div>
+            <div class="stat-label">Votos Registrados</div>
         </div>
     </div>
     <div class="col-md-4">
-        <div class="card text-center shadow-sm">
-            <div class="card-body">
-                <i class="bi bi-people fs-2 text-primary"></i>
-                <h3 class="mt-2">{{ dados|length }}</h3>
-                <p class="mb-0 text-muted">Candidatos</p>
-            </div>
+        <div class="stat-card stat-green">
+            <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-value">{{ dados|length }}</div>
+            <div class="stat-label">Candidatos</div>
         </div>
     </div>
-    {% if dados %}
+    {% if dados and dados[0][1] > 0 %}
     <div class="col-md-4">
-        <div class="card text-center shadow-sm border-warning">
-            <div class="card-body">
-                <i class="bi bi-trophy-fill fs-2 text-warning"></i>
-                <h3 class="mt-2">{{ dados[0][0].nome }}</h3>
-                <p class="mb-0 text-muted">Candidato mais votado</p>
-            </div>
+        <div class="stat-card stat-amber">
+            <div class="stat-icon"><i class="bi bi-trophy"></i></div>
+            <div class="stat-value" style="font-size:1.1rem;margin-top:.4rem;">{{ dados[0][0].nome }}</div>
+            <div class="stat-label">Mais votado</div>
         </div>
     </div>
     {% endif %}
 </div>
 
 {% if dados %}
-<div class="card shadow">
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <strong>Apuração dos Votos</strong>
-    </div>
+<div class="card">
+    <div class="card-header">Apuração dos Votos</div>
     <div class="card-body p-0">
         <table class="table table-hover mb-0 align-middle">
-            <thead class="table-light">
+            <thead>
                 <tr>
-                    <th style="width:60px">Pos.</th>
-                    <th style="width:70px" class="d-print-none">Foto</th>
+                    <th style="width:60px;">Pos.</th>
+                    <th style="width:60px;" class="d-print-none">Foto</th>
                     <th>Candidato</th>
                     <th>Cargo / Setor</th>
-                    <th style="width:80px">Votos</th>
-                    <th style="width:200px">Percentual</th>
+                    <th style="width:80px;">Votos</th>
+                    <th style="width:220px;">Percentual</th>
                 </tr>
             </thead>
             <tbody>
                 {% for candidato, votos in dados %}
-                <tr class="{{ 'table-success fw-bold' if loop.first }}">
-                    <td class="text-center">
-                        {% if loop.first %}
-                            <i class="bi bi-trophy-fill text-warning fs-5"></i>
+                {% set pct = ((votos / total_votos * 100) | round(1)) if total_votos > 0 else 0 %}
+                <tr class="{{ 'table-success' if loop.first and votos > 0 }}">
+                    <td class="text-center fw-semibold">
+                        {% if loop.first and votos > 0 %}
+                            <i class="bi bi-trophy-fill text-warning"></i>
                         {% else %}
-                            {{ loop.index }}º
+                            <span class="text-muted">{{ loop.index }}º</span>
                         {% endif %}
                     </td>
                     <td class="d-print-none">
                         {% if candidato.foto %}
-                        <img src="{{ candidato.foto }}"
-                             class="rounded-circle" style="width:45px;height:45px;object-fit:cover;">
+                        <img src="{{ candidato.foto }}" class="rounded-circle"
+                             style="width:42px;height:42px;object-fit:cover;">
                         {% else %}
-                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center"
-                             style="width:45px;height:45px;">
-                            <i class="bi bi-person-fill text-white"></i>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center"
+                             style="width:42px;height:42px;background:#f3f4f6;">
+                            <i class="bi bi-person-fill text-secondary"></i>
                         </div>
                         {% endif %}
                     </td>
-                    <td>{{ candidato.nome }}</td>
-                    <td>{{ candidato.cargo }}</td>
-                    <td class="text-center">{{ votos }}</td>
+                    <td><span class="fw-semibold">{{ candidato.nome }}</span></td>
+                    <td><span class="text-muted">{{ candidato.cargo }}</span></td>
+                    <td class="text-center fw-bold">{{ votos }}</td>
                     <td>
                         {% if total_votos > 0 %}
-                            {% set pct = (votos / total_votos * 100) | round(1) %}
-                            <div class="progress d-print-none" style="height:20px">
-                                <div class="progress-bar" style="width:{{ pct }}%">{{ pct }}%</div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress flex-grow-1" style="height:16px;">
+                                <div class="progress-bar" style="width:{{ pct }}%;">
+                                    {% if pct > 10 %}{{ pct }}%{% endif %}
+                                </div>
                             </div>
-                            <span class="d-none d-print-inline">{{ pct }}%</span>
+                            <span class="text-muted" style="font-size:.8rem;min-width:36px;">{{ pct }}%</span>
+                        </div>
                         {% else %}
-                            —
+                        <span class="text-muted">—</span>
                         {% endif %}
                     </td>
                 </tr>
@@ -125,23 +107,26 @@
     </div>
 </div>
 
-<div class="mt-4 d-print-block">
-    <p class="text-muted small">
-        <i class="bi bi-info-circle"></i>
-        Total de participantes que votaram: <strong>{{ total_votos }}</strong>.
-        Resultado gerado automaticamente pelo sistema de votação CIPA 2026.
-    </p>
-</div>
+<p class="text-muted mt-3 d-print-block" style="font-size:.8rem;">
+    <i class="bi bi-info-circle"></i>
+    Total de votos: <strong>{{ total_votos }}</strong> —
+    Resultado gerado em {{ now }} pelo Sistema de Votação CIPA 2026.
+</p>
 
 {% else %}
-<p class="text-muted">Nenhum candidato cadastrado.</p>
+<div class="card">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-bar-chart" style="font-size:2.5rem;opacity:.3;"></i>
+        <p class="mt-2 mb-0">Nenhum candidato cadastrado ainda.</p>
+    </div>
+</div>
 {% endif %}
 
 <style>
 @media print {
-    body { font-size: 12pt; }
+    body { background: #fff; font-size: 11pt; }
     .card { border: 1px solid #ccc !important; box-shadow: none !important; }
-    .table-success td { background-color: #d1e7dd !important; -webkit-print-color-adjust: exact; }
+    .table-success td { background-color: #d1fae5 !important; -webkit-print-color-adjust: exact; }
 }
 </style>
 {% endblock %}

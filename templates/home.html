@@ -1,70 +1,67 @@
 {% extends 'base.html' %}
-{% block title %}CIPA 2026 — Sistema de Votação{% endblock %}
+{% block title %}Neoenergia Brasília — Eleição CIPA 2026{% endblock %}
 
 {% block content %}
 <div class="hero rounded-3">
     <div class="container">
+
+        {# Logo / Cabeçalho #}
         <div class="row justify-content-center text-center text-white mb-5">
             <div class="col-lg-7">
                 <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-4"
-                     style="width:72px;height:72px;background:rgba(255,255,255,.12);backdrop-filter:blur(8px);">
-                    <i class="bi bi-shield-check" style="font-size:2rem;"></i>
+                     style="width:76px;height:76px;background:rgba(247,148,29,.2);border:2px solid rgba(247,148,29,.4);">
+                    <i class="bi bi-lightning-charge-fill" style="font-size:2.2rem;color:#F7941D;"></i>
                 </div>
-                <h1 class="fw-bold mb-3" style="font-size:2.4rem;letter-spacing:-.02em;">
+
+                <p class="mb-1 fw-semibold" style="color:#F7941D;font-size:.9rem;letter-spacing:.12em;text-transform:uppercase;">
+                    Neo Energia Brasília
+                </p>
+                <h1 class="fw-bold mb-3" style="font-size:2.3rem;letter-spacing:-.02em;">
                     Eleição CIPA 2026
                 </h1>
-                <p style="color:rgba(255,255,255,.7);font-size:1.05rem;">
-                    Sistema digital de votação seguro e transparente para a eleição da<br>
+                <p style="color:rgba(255,255,255,.65);font-size:1rem;max-width:460px;margin:0 auto;">
+                    Sistema digital de votação seguro e transparente para a eleição da
                     Comissão Interna de Prevenção de Acidentes.
                 </p>
             </div>
         </div>
 
-        <div class="row justify-content-center g-4">
-            <div class="col-md-5">
+        {# Card de Votação — destaque total #}
+        <div class="row justify-content-center mb-4">
+            <div class="col-md-6 col-sm-9">
                 <a href="{{ url_for('login_votacao') }}" class="text-decoration-none">
-                    <div class="card hero-card h-100 text-center p-4">
+                    <div class="card hero-card text-center p-4">
                         <div class="card-body">
                             <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-4"
-                                 style="width:60px;height:60px;background:#eff6ff;">
-                                <i class="bi bi-ballot-heart text-primary" style="font-size:1.6rem;"></i>
+                                 style="width:64px;height:64px;background:#fff7ed;">
+                                <i class="bi bi-ballot-heart" style="font-size:1.8rem;color:#F7941D;"></i>
                             </div>
                             <h5 class="fw-bold mb-2">Área de Votação</h5>
                             <p class="text-muted mb-4" style="font-size:.875rem;">
                                 Acesse com sua matrícula e registre seu voto de forma segura e sigilosa.
                             </p>
-                            <span class="btn btn-primary px-4">
+                            <span class="btn btn-primary btn-lg px-5">
                                 <i class="bi bi-arrow-right-circle"></i> Votar agora
                             </span>
                         </div>
                     </div>
                 </a>
             </div>
-
-            <div class="col-md-5">
-                <a href="{{ url_for('login_admin') }}" class="text-decoration-none">
-                    <div class="card hero-card h-100 text-center p-4">
-                        <div class="card-body">
-                            <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-4"
-                                 style="width:60px;height:60px;background:#f5f3ff;">
-                                <i class="bi bi-gear" style="font-size:1.6rem;color:#7c3aed;"></i>
-                            </div>
-                            <h5 class="fw-bold mb-2">Área Administrativa</h5>
-                            <p class="text-muted mb-4" style="font-size:.875rem;">
-                                Gerencie candidatos, funcionários e controle o andamento da eleição.
-                            </p>
-                            <span class="btn btn-outline-secondary px-4">
-                                <i class="bi bi-lock"></i> Acesso restrito
-                            </span>
-                        </div>
-                    </div>
-                </a>
-            </div>
         </div>
 
-        <p class="text-center mt-5" style="color:rgba(255,255,255,.4);font-size:.8rem;">
-            <i class="bi bi-lock-fill"></i> Sistema seguro — os votos são registrados de forma anônima
-        </p>
+        {# Rodapé com acesso discreto ao admin #}
+        <div class="text-center">
+            <p style="color:rgba(255,255,255,.35);font-size:.8rem;margin-bottom:.5rem;">
+                <i class="bi bi-lock-fill"></i> Voto sigiloso e seguro
+            </p>
+            <a href="{{ url_for('login_admin') }}"
+               style="color:rgba(255,255,255,.25);font-size:.75rem;text-decoration:none;transition:color .2s;"
+               onmouseover="this.style.color='rgba(255,255,255,.55)'"
+               onmouseout="this.style.color='rgba(255,255,255,.25)'">
+                Acesso administrativo
+            </a>
+        </div>
+
     </div>
 </div>
 {% endblock %}

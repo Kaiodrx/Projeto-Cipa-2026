@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-admin">
+    <div class="container">
+        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+            <div class="brand-icon">
+                <i class="bi bi-shield-check text-white"></i>
+            </div>
+            CIPA 2026
+        </a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navAdmin" style="color:rgba(255,255,255,.6)">
+            <i class="bi bi-list fs-4"></i>
+        </button>
+        <div class="collapse navbar-collapse" id="navAdmin">
+            <div class="navbar-nav ms-auto d-flex gap-1 align-items-center">
+                <a class="nav-link {% if request.endpoint == 'candidatos' %}active{% endif %}"
+                   href="{{ url_for('candidatos') }}">
+                    <i class="bi bi-people"></i> Candidatos
+                </a>
+                <a class="nav-link {% if request.endpoint == 'funcionarios' %}active{% endif %}"
+                   href="{{ url_for('funcionarios') }}">
+                    <i class="bi bi-person-badge"></i> Funcionários
+                </a>
+                <a class="nav-link {% if request.endpoint == 'gerenciar_eleicao' %}active{% endif %}"
+                   href="{{ url_for('gerenciar_eleicao') }}">
+                    <i class="bi bi-ballot"></i> Eleição
+                </a>
+                <a class="nav-link {% if request.endpoint == 'resultado' %}active{% endif %}"
+                   href="{{ url_for('resultado') }}">
+                    <i class="bi bi-bar-chart"></i> Resultado
+                </a>
+                <a class="nav-link nav-link-danger ms-2" href="{{ url_for('logout_admin') }}">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+{% block admin_content %}{% endblock %}
+{% endblock %}

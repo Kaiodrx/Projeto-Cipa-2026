@@ -254,7 +254,12 @@ def resultado():
 
 # ── Votação pública ────────────────────────────────────────────────────────────
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
+def home():
+    return render_template('home.html')
+
+
+@app.route('/votacao', methods=['GET', 'POST'])
 def login_votacao():
     eleicao = Eleicao.query.first()
     if request.method == 'POST':
@@ -269,7 +274,7 @@ def login_votacao():
         else:
             session['funcionario_id'] = funcionario.id
             return redirect(url_for('votar'))
-    return render_template('votacao/login.html', eleicao=eleicao)
+    return render_template('votacao/login.html', eleicao=eleicao, url_home=url_for('home'))
 
 
 @app.route('/votar', methods=['GET', 'POST'])

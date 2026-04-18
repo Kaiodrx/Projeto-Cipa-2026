@@ -16,14 +16,14 @@
 
 <div class="row g-3 mb-4">
     <div class="col-md-3 col-6">
-        <div class="stat-card stat-blue">
+        <div class="stat-card stat-green">
             <div class="stat-icon"><i class="bi bi-people"></i></div>
             <div class="stat-value">{{ total_candidatos }}</div>
             <div class="stat-label">Candidatos</div>
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="stat-card stat-green">
+        <div class="stat-card stat-blue">
             <div class="stat-icon"><i class="bi bi-person-badge"></i></div>
             <div class="stat-value">{{ total_funcionarios }}</div>
             <div class="stat-label">Funcionários</div>
@@ -37,26 +37,31 @@
         </div>
     </div>
     <div class="col-md-3 col-6">
-        <div class="stat-card {{ 'stat-purple' if eleicao.status == 'aberta' else 'stat-red' }}">
+        <div class="stat-card {{ 'stat-green' if eleicao.status == 'aberta' else 'stat-red' }}">
             <div class="stat-icon"><i class="bi bi-ballot"></i></div>
             <div class="stat-value" style="font-size:1.4rem;margin-top:.5rem;">
                 {{ eleicao.status | capitalize }}
             </div>
-            <div class="stat-label">Status</div>
+            <div class="stat-label">Status da Eleição</div>
         </div>
     </div>
 </div>
 
 {% if total_funcionarios > 0 %}
 <div class="card mb-4">
-    <div class="card-header">Participação na votação</div>
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-graph-up" style="color:#00AA44;"></i>
+        Participação na votação
+    </div>
     <div class="card-body">
         {% set pct = ((total_votos / total_funcionarios) * 100) | round(1) if total_funcionarios > 0 else 0 %}
         <div class="d-flex justify-content-between mb-2">
-            <span class="text-muted" style="font-size:.825rem;">{{ total_votos }} de {{ total_funcionarios }} funcionários votaram</span>
-            <span class="fw-semibold" style="font-size:.825rem;">{{ pct }}%</span>
+            <span class="text-muted" style="font-size:.825rem;">
+                {{ total_votos }} de {{ total_funcionarios }} funcionários votaram
+            </span>
+            <span class="fw-bold" style="color:#00AA44;font-size:.875rem;">{{ pct }}%</span>
         </div>
-        <div class="progress" style="height:10px;">
+        <div class="progress" style="height:12px;">
             <div class="progress-bar" style="width:{{ pct }}%;"></div>
         </div>
     </div>
@@ -64,29 +69,36 @@
 {% endif %}
 
 <div class="card">
-    <div class="card-header">Ações rápidas</div>
+    <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-lightning-charge" style="color:#F7941D;"></i>
+        Ações rápidas
+    </div>
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-3 col-6">
-                <a href="{{ url_for('candidatos') }}" class="btn btn-outline-primary w-100 quick-btn">
+                <a href="{{ url_for('candidatos') }}" class="btn w-100 quick-btn"
+                   style="background:#e6f7ee;color:#006b2b;border:1.5px solid #00AA44;">
                     <i class="bi bi-person-plus d-block mb-1" style="font-size:1.3rem;"></i>
                     Candidatos
                 </a>
             </div>
             <div class="col-md-3 col-6">
-                <a href="{{ url_for('funcionarios') }}" class="btn btn-outline-success w-100 quick-btn">
+                <a href="{{ url_for('funcionarios') }}" class="btn w-100 quick-btn"
+                   style="background:#e8eeff;color:#002a80;border:1.5px solid #003399;">
                     <i class="bi bi-people d-block mb-1" style="font-size:1.3rem;"></i>
                     Funcionários
                 </a>
             </div>
             <div class="col-md-3 col-6">
-                <a href="{{ url_for('gerenciar_eleicao') }}" class="btn btn-outline-warning w-100 quick-btn">
+                <a href="{{ url_for('gerenciar_eleicao') }}" class="btn w-100 quick-btn"
+                   style="background:#fff3e0;color:#c97000;border:1.5px solid #F7941D;">
                     <i class="bi bi-toggle-on d-block mb-1" style="font-size:1.3rem;"></i>
                     Eleição
                 </a>
             </div>
             <div class="col-md-3 col-6">
-                <a href="{{ url_for('resultado') }}" class="btn btn-outline-secondary w-100 quick-btn">
+                <a href="{{ url_for('resultado') }}" class="btn w-100 quick-btn"
+                   style="background:#f0fdf4;color:#006b2b;border:1.5px solid #00AA44;">
                     <i class="bi bi-bar-chart-line d-block mb-1" style="font-size:1.3rem;"></i>
                     Resultado
                 </a>

@@ -10,9 +10,28 @@ from ...utils import login_required
 @admin_bp.route('/candidatos')
 @login_required
 def candidatos():
-    return render_template('admin/candidatos.html',
-                           candidatos=Candidato.query.order_by(Candidato.unidade, Candidato.nome).all(),
-                           unidades=UNIDADES)
+    search = request.args.get('search', '').strip()
+    unidade_filtro = request.args.get('unidade', '')
+    page = request.args.get('page', 1, type=int)
+
+    query = Candidato.query
+    if search:
+        query = query.filter(Candidato.nome.ilike(f'%{search}%'))
+    if unidade_filtro:
+        query = query.filter_by(unidade=unidade_filtro)
+
+    pagination = query.order_by(Candidato.unidade, Candidato.nome).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    return render_template(
+        'admin/candidatos.html',
+        candidatos=pagination.items,
+        pagination=pagination,
+        unidades=UNIDADES,
+        search=search,
+        unidade_filtro=unidade_filtro,
+        total_geral=Candidato.query.count(),
+    )
 
 
 @admin_bp.route('/candidatos/adicionar', methods=['POST'])

@@ -19,7 +19,7 @@
             <i class="bi bi-circle-fill me-1" style="font-size:.5rem;vertical-align:middle;"></i>
             {{ total_abertas }} de {{ unidades|length }} unidades abertas
         </span>
-        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Voltar
         </a>
     </div>
@@ -35,11 +35,11 @@
             </p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{{ url_for('abrir_todas') }}" class="btn btn-success"
+            <a href="{{ url_for('admin.abrir_todas') }}" class="btn btn-success"
                onclick="return confirm('Abrir eleição em TODAS as unidades?')">
                 <i class="bi bi-play-circle"></i> Abrir Todas
             </a>
-            <a href="{{ url_for('fechar_todas') }}" class="btn btn-danger"
+            <a href="{{ url_for('admin.fechar_todas') }}" class="btn btn-danger"
                onclick="return confirm('Encerrar eleição em TODAS as unidades?')">
                 <i class="bi bi-stop-circle"></i> Encerrar Todas
             </a>
@@ -109,7 +109,7 @@
                 <i class="bi bi-person-x" style="font-size:1.5rem;opacity:.3;"></i>
                 <p class="mt-1 mb-0" style="font-size:.8rem;">
                     Sem candidatos —
-                    <a href="{{ url_for('candidatos') }}" class="text-decoration-none" style="color:#F7941D;">
+                    <a href="{{ url_for('admin.candidatos') }}" class="text-decoration-none" style="color:#F7941D;">
                         cadastrar →
                     </a>
                 </p>
@@ -120,13 +120,13 @@
         {# Botão de controle individual #}
         <div class="card-footer bg-white border-top-0 pt-0 pb-3 px-3">
             {% if aberta %}
-            <a href="{{ url_for('fechar_eleicao', unidade=unidade) }}"
+            <a href="{{ url_for('admin.fechar_eleicao', unidade=unidade) }}"
                class="btn btn-danger w-100"
                onclick="return confirm('Encerrar eleição em {{ unidade }}?')">
                 <i class="bi bi-stop-circle"></i> Encerrar esta unidade
             </a>
             {% else %}
-            <a href="{{ url_for('abrir_eleicao', unidade=unidade) }}"
+            <a href="{{ url_for('admin.abrir_eleicao', unidade=unidade) }}"
                class="btn btn-success w-100"
                onclick="return confirm('Abrir eleição em {{ unidade }}?')">
                 <i class="bi bi-play-circle"></i> Abrir esta unidade

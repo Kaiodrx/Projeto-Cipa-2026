@@ -7,7 +7,7 @@
         <h4 class="fw-bold mb-0">Funcionários</h4>
         <p class="text-muted mb-0" style="font-size:.825rem;">Gerencie quem está habilitado a votar</p>
     </div>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Voltar
     </a>
 </div>
@@ -15,7 +15,7 @@
 <div class="card mb-4">
     <div class="card-header">Adicionar funcionário</div>
     <div class="card-body">
-        <form method="POST" action="{{ url_for('adicionar_funcionario') }}">
+        <form method="POST" action="{{ url_for('admin.adicionar_funcionario') }}">
             <div class="row g-3 align-items-end">
                 <div class="col-md-2">
                     <label class="form-label">Matrícula</label>
@@ -89,7 +89,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <a href="{{ url_for('remover_funcionario', id=f.id) }}"
+                        <a href="{{ url_for('admin.remover_funcionario', id=f.id) }}"
                            class="btn btn-sm btn-outline-danger"
                            onclick="return confirm('Remover {{ f.nome }}?')">
                             <i class="bi bi-trash"></i>

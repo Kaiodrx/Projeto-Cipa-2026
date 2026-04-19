@@ -14,28 +14,52 @@
 
 {% if registros %}
 <div class="row g-4">
-    {% for r in registros %}
-    {% set snap = r.dados | tojson | safe %}
+    {% for item in registros %}
     <div class="col-md-6">
         <div class="card h-100" style="border-left:4px solid #00AA44;">
             <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between gap-2">
+                <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
                     <div>
-                        <h6 class="fw-bold mb-1">{{ r.titulo }}</h6>
+                        <h6 class="fw-bold mb-1">{{ item.registro.titulo }}</h6>
                         <p class="text-muted mb-0" style="font-size:.8rem;">
                             <i class="bi bi-calendar3"></i>
-                            {{ r.data.strftime('%d/%m/%Y às %H:%M') }}
+                            {{ item.registro.data.strftime('%d/%m/%Y às %H:%M') }}
                         </p>
                     </div>
-                    <span class="badge bg-success">Concluída</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge" style="background:#e6f7ee;color:#006b2b;">
+                            <i class="bi bi-check2-square"></i> {{ item.total_geral }} votos
+                        </span>
+                        <span class="badge bg-success">Concluída</span>
+                    </div>
                 </div>
+                {% if item.vencedores %}
+                <div style="font-size:.8rem;">
+                    <p class="text-muted mb-1 fw-semibold">
+                        <i class="bi bi-trophy-fill text-warning"></i> Vencedores por unidade:
+                    </p>
+                    <ul class="list-unstyled mb-0" style="columns:2;gap:1rem;">
+                        {% for v in item.vencedores %}
+                        <li class="mb-1" style="break-inside:avoid;">
+                            <span class="text-muted" style="font-size:.72rem;">{{ v.unidade }}</span><br>
+                            <span class="fw-semibold">{{ v.nome }}</span>
+                            <span class="text-muted">({{ v.votos }})</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0" style="font-size:.82rem;">
+                    <i class="bi bi-info-circle"></i> Nenhum voto registrado.
+                </p>
+                {% endif %}
             </div>
             <div class="card-footer bg-white d-flex gap-2 justify-content-end">
-                <a href="{{ url_for('ver_historico', id=r.id) }}"
+                <a href="{{ url_for('ver_historico', id=item.registro.id) }}"
                    class="btn btn-sm btn-primary">
                     <i class="bi bi-eye"></i> Ver Relatório
                 </a>
-                <form method="POST" action="{{ url_for('excluir_historico', id=r.id) }}"
+                <form method="POST" action="{{ url_for('excluir_historico', id=item.registro.id) }}"
                       onsubmit="return confirm('Excluir este registro permanentemente?')">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-trash"></i>

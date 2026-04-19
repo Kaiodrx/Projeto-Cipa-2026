@@ -3,7 +3,7 @@
 {% block navbar %}
 <nav class="navbar navbar-expand-lg navbar-admin">
     <div class="container">
-        <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+        <a class="navbar-brand" href="{{ url_for('admin.dashboard') }}">
             <img src="{{ url_for('static', filename='logo-neoenergia.png') }}"
                  alt="Neoenergia Brasília"
                  style="height:38px;width:38px;object-fit:contain;border-radius:8px;">
@@ -14,31 +14,31 @@
         </button>
         <div class="collapse navbar-collapse" id="navAdmin">
             <div class="navbar-nav ms-auto d-flex gap-1 align-items-center">
-                <a class="nav-link {% if request.endpoint == 'candidatos' %}active{% endif %}"
-                   href="{{ url_for('candidatos') }}">
+                <a class="nav-link {% if request.endpoint == 'admin.candidatos' %}active{% endif %}"
+                   href="{{ url_for('admin.candidatos') }}">
                     <i class="bi bi-people"></i> Candidatos
                 </a>
-                <a class="nav-link {% if request.endpoint == 'funcionarios' %}active{% endif %}"
-                   href="{{ url_for('funcionarios') }}">
+                <a class="nav-link {% if request.endpoint == 'admin.funcionarios' %}active{% endif %}"
+                   href="{{ url_for('admin.funcionarios') }}">
                     <i class="bi bi-person-badge"></i> Funcionários
                 </a>
-                <a class="nav-link {% if request.endpoint == 'gerenciar_eleicao' %}active{% endif %}"
-                   href="{{ url_for('gerenciar_eleicao') }}">
+                <a class="nav-link {% if request.endpoint == 'admin.gerenciar_eleicao' %}active{% endif %}"
+                   href="{{ url_for('admin.gerenciar_eleicao') }}">
                     <i class="bi bi-ballot"></i> Eleição
                 </a>
-                <a class="nav-link {% if request.endpoint == 'participacao' %}active{% endif %}"
-                   href="{{ url_for('participacao') }}">
+                <a class="nav-link {% if request.endpoint == 'admin.participacao' %}active{% endif %}"
+                   href="{{ url_for('admin.participacao') }}">
                     <i class="bi bi-person-check"></i> Participação
                 </a>
-                <a class="nav-link {% if request.endpoint == 'resultado' %}active{% endif %}"
-                   href="{{ url_for('resultado') }}">
+                <a class="nav-link {% if request.endpoint == 'admin.resultado' %}active{% endif %}"
+                   href="{{ url_for('admin.resultado') }}">
                     <i class="bi bi-bar-chart"></i> Resultado
                 </a>
-                <a class="nav-link {% if request.endpoint in ('historico', 'ver_historico') %}active{% endif %}"
-                   href="{{ url_for('historico') }}">
+                <a class="nav-link {% if request.endpoint in ('admin.historico', 'admin.ver_historico') %}active{% endif %}"
+                   href="{{ url_for('admin.historico') }}">
                     <i class="bi bi-archive"></i> Histórico
                 </a>
-                <a class="nav-link nav-link-danger ms-2" href="{{ url_for('logout_admin') }}">
+                <a class="nav-link nav-link-danger ms-2" href="{{ url_for('admin.logout_admin') }}">
                     <i class="bi bi-box-arrow-right"></i> Sair
                 </a>
             </div>

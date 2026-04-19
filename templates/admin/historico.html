@@ -7,7 +7,7 @@
         <h4 class="fw-bold mb-0">Histórico de Eleições</h4>
         <p class="text-muted mb-0" style="font-size:.825rem;">Relatórios das eleições finalizadas</p>
     </div>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Painel
     </a>
 </div>
@@ -55,11 +55,11 @@
                 {% endif %}
             </div>
             <div class="card-footer bg-white d-flex gap-2 justify-content-end">
-                <a href="{{ url_for('ver_historico', id=item.registro.id) }}"
+                <a href="{{ url_for('admin.ver_historico', id=item.registro.id) }}"
                    class="btn btn-sm btn-primary">
                     <i class="bi bi-eye"></i> Ver Relatório
                 </a>
-                <form method="POST" action="{{ url_for('excluir_historico', id=item.registro.id) }}"
+                <form method="POST" action="{{ url_for('admin.excluir_historico', id=item.registro.id) }}"
                       onsubmit="return confirm('Excluir este registro permanentemente?')">
                     <button type="submit" class="btn btn-sm btn-outline-danger">
                         <i class="bi bi-trash"></i>
@@ -76,7 +76,7 @@
         <i class="bi bi-archive" style="font-size:3rem;opacity:.25;"></i>
         <p class="mt-3 mb-0">Nenhuma eleição finalizada ainda.</p>
         <p style="font-size:.85rem;">Ao finalizar uma eleição na página de Resultado, ela aparecerá aqui.</p>
-        <a href="{{ url_for('resultado') }}" class="btn btn-outline-primary mt-2">
+        <a href="{{ url_for('admin.resultado') }}" class="btn btn-outline-primary mt-2">
             <i class="bi bi-bar-chart"></i> Ir para Resultado
         </a>
     </div>

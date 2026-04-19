@@ -423,7 +423,20 @@ def finalizar_eleicao():
 @app.route('/admin/historico')
 @login_required
 def historico():
-    registros = HistoricoEleicao.query.order_by(HistoricoEleicao.data.desc()).all()
+    registros_raw = HistoricoEleicao.query.order_by(HistoricoEleicao.data.desc()).all()
+    registros = []
+    for r in registros_raw:
+        snap = json.loads(r.dados)
+        vencedores = []
+        for u in snap.get('unidades', []):
+            cands = u.get('candidatos', [])
+            if cands and cands[0]['votos'] > 0:
+                vencedores.append({'unidade': u['unidade'], 'nome': cands[0]['nome'], 'votos': cands[0]['votos']})
+        registros.append({
+            'registro': r,
+            'total_geral': snap.get('total_geral', 0),
+            'vencedores': vencedores,
+        })
     return render_template('admin/historico.html', registros=registros)
 
 

@@ -12,6 +12,22 @@
     </a>
 </div>
 
+{% set ns = namespace(tem_base64=false) %}
+{% for c in candidatos %}{% if c.foto and c.foto[:5] == 'data:' %}{% set ns.tem_base64 = true %}{% endif %}{% endfor %}
+{% if ns.tem_base64 %}
+<div class="alert alert-warning d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        Algumas fotos ainda estao em formato antigo (base64). Clique para migrar para arquivos.
+    </div>
+    <form method="POST" action="{{ url_for('migrar_fotos') }}" class="ms-3 flex-shrink-0">
+        <button type="submit" class="btn btn-warning btn-sm fw-semibold">
+            <i class="bi bi-arrow-repeat"></i> Migrar Fotos
+        </button>
+    </form>
+</div>
+{% endif %}
+
 <div class="card mb-4">
     <div class="card-header">Adicionar novo candidato</div>
     <div class="card-body">

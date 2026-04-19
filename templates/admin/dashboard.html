@@ -111,25 +111,36 @@
                     Resultado
                 </a>
             </div>
+            <div class="col col-6">
+                <button onclick="document.getElementById('modalQR').style.display='flex'"
+                        class="btn w-100 quick-btn"
+                        style="background:#f3f0ff;color:#4c1d95;border:1.5px solid #7c3aed;">
+                    <i class="bi bi-qr-code d-block mb-1" style="font-size:1.3rem;"></i>
+                    QR Code
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
-{# ── QR Code de votação ── #}
-<div class="card mb-4">
-    <div class="card-header d-flex align-items-center gap-2">
-        <i class="bi bi-qr-code" style="color:#003399;"></i>
-        QR Code — Acesso à Votação
-    </div>
-    <div class="card-body text-center">
-        <p class="text-muted mb-3" style="font-size:.85rem;">
-            Aponte a câmera do celular para acessar a página de votação. Baixe a imagem para usar em painéis ou apresentações.
-        </p>
-        <div id="qrcode" class="d-inline-block p-3 bg-white rounded-3 border mb-3"></div>
-        <p class="text-muted mb-3" style="font-size:.75rem;" id="qr-url-label"></p>
-        <button onclick="baixarQRCode()" class="btn btn-primary">
-            <i class="bi bi-download"></i> Baixar QR Code
-        </button>
+{# ── Modal QR Code ── #}
+<div id="modalQR" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+    <div class="card" style="max-width:360px;width:90%;border-radius:16px;">
+        <div class="card-header d-flex align-items-center justify-content-between">
+            <span class="fw-bold"><i class="bi bi-qr-code me-2" style="color:#7c3aed;"></i>QR Code — Votação</span>
+            <button onclick="document.getElementById('modalQR').style.display='none'"
+                    class="btn-close"></button>
+        </div>
+        <div class="card-body text-center">
+            <p class="text-muted mb-3" style="font-size:.82rem;">
+                Aponte a câmera do celular ou baixe para usar em painéis e apresentações.
+            </p>
+            <div id="qrcode" class="d-inline-block p-3 bg-white rounded-3 border mb-2"></div>
+            <p class="text-muted mb-3" style="font-size:.72rem;" id="qr-url-label"></p>
+            <button onclick="baixarQRCode()" class="btn btn-primary w-100">
+                <i class="bi bi-download"></i> Baixar QR Code (.png)
+            </button>
+        </div>
     </div>
 </div>
 

@@ -1,7 +1,10 @@
 {% extends 'base_admin.html' %}
 {% block title %}Funcionários — CIPA 2026{% endblock %}
+{% from 'admin/_macros.html' import paginacao %}
 
 {% block admin_content %}
+
+{# ── Cabeçalho ── #}
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
         <h4 class="fw-bold mb-0">Funcionários</h4>
@@ -12,60 +15,193 @@
     </a>
 </div>
 
-<div class="card mb-4">
-    <div class="card-header">Adicionar funcionário</div>
-    <div class="card-body">
-        <form method="POST" action="{{ url_for('admin.adicionar_funcionario') }}">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-2">
-                    <label class="form-label">Matrícula</label>
-                    <input type="text" name="matricula" class="form-control" placeholder="Ex: 00123" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Nome completo</label>
-                    <input type="text" name="nome" class="form-control" placeholder="Nome do funcionário" required>
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Unidade</label>
-                    <select name="unidade" class="form-select" required>
-                        <option value="" disabled selected>Selecione a unidade...</option>
-                        {% for u in unidades %}
-                        <option value="{{ u }}">{{ u }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-success w-100">
-                        <i class="bi bi-plus-lg"></i> Adicionar
-                    </button>
-                </div>
+{# ── Cards de status (clicáveis para filtrar rapidamente) ── #}
+<div class="row g-3 mb-4">
+    <div class="col-4">
+        <a href="{{ url_for('admin.funcionarios') }}" class="text-decoration-none">
+            <div class="stat-card stat-blue"
+                 style="{{ 'outline:2px solid #003399;outline-offset:3px;' if not status and not search and not unidade_filtro }}">
+                <div class="stat-icon"><i class="bi bi-people"></i></div>
+                <div class="stat-value">{{ total_geral }}</div>
+                <div class="stat-label">Total</div>
             </div>
-        </form>
+        </a>
+    </div>
+    <div class="col-4">
+        <a href="{{ url_for('admin.funcionarios', status='votou') }}" class="text-decoration-none">
+            <div class="stat-card stat-green"
+                 style="{{ 'outline:2px solid #00AA44;outline-offset:3px;' if status == 'votou' }}">
+                <div class="stat-icon"><i class="bi bi-check2-circle"></i></div>
+                <div class="stat-value">{{ total_votou }}</div>
+                <div class="stat-label">Já Votaram</div>
+            </div>
+        </a>
+    </div>
+    <div class="col-4">
+        <a href="{{ url_for('admin.funcionarios', status='pendente') }}" class="text-decoration-none">
+            <div class="stat-card stat-amber"
+                 style="{{ 'outline:2px solid #F7941D;outline-offset:3px;' if status == 'pendente' }}">
+                <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+                <div class="stat-value">{{ total_pendente }}</div>
+                <div class="stat-label">Pendentes</div>
+            </div>
+        </a>
     </div>
 </div>
 
+{# ── Formulário de adição (colapsável) ── #}
+<div class="card mb-4">
+    <div class="card-header d-flex align-items-center justify-content-between"
+         style="cursor:pointer;" data-bs-toggle="collapse" data-bs-target="#formAdicionar"
+         aria-expanded="false">
+        <span><i class="bi bi-person-plus me-2" style="color:#00AA44;"></i>Adicionar funcionário</span>
+        <i class="bi bi-chevron-down text-muted" id="iconAdicionar"></i>
+    </div>
+    <div class="collapse" id="formAdicionar">
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('admin.adicionar_funcionario') }}">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-2">
+                        <label class="form-label">Matrícula</label>
+                        <input type="text" name="matricula" class="form-control" placeholder="Ex: 00123" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Nome completo</label>
+                        <input type="text" name="nome" class="form-control" placeholder="Nome do funcionário" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Unidade</label>
+                        <select name="unidade" class="form-select" required>
+                            <option value="" disabled selected>Selecione a unidade...</option>
+                            {% for u in unidades %}
+                            <option value="{{ u }}">{{ u }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="bi bi-plus-lg"></i> Adicionar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{# ── Barra de busca e filtros ── #}
+<form method="GET" action="{{ url_for('admin.funcionarios') }}" id="filtroForm">
+    <div class="row g-2 align-items-center mb-2">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" name="search"
+                       class="form-control border-start-0 ps-1"
+                       placeholder="Buscar por nome ou matrícula..."
+                       value="{{ search }}"
+                       autocomplete="off">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="unidade" class="form-select" onchange="this.form.submit()">
+                <option value="">Todas as unidades</option>
+                {% for u in unidades %}
+                <option value="{{ u }}" {{ 'selected' if unidade_filtro == u }}>{{ u }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="" {{ 'selected' if not status }}>Todos os status</option>
+                <option value="votou" {{ 'selected' if status == 'votou' }}>✓ Já votaram</option>
+                <option value="pendente" {{ 'selected' if status == 'pendente' }}>⏳ Pendentes</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100" title="Buscar">
+                <i class="bi bi-search"></i>
+            </button>
+        </div>
+        <div class="col-md-1">
+            {% if search or status or unidade_filtro %}
+            <a href="{{ url_for('admin.funcionarios') }}"
+               class="btn btn-outline-secondary w-100" title="Limpar filtros">
+                <i class="bi bi-x-lg"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</form>
+
+{# ── Chips de filtros ativos ── #}
+{% if search or status or unidade_filtro %}
+<div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+    <span class="text-muted" style="font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;">
+        Filtros:
+    </span>
+    {% if search %}
+    <a href="{{ url_for('admin.funcionarios', status=status, unidade=unidade_filtro) }}"
+       class="badge text-decoration-none d-inline-flex align-items-center gap-1"
+       style="background:#e8eeff;color:#002a80;padding:.35rem .65rem;font-size:.78rem;">
+        <i class="bi bi-search"></i> "{{ search }}" <i class="bi bi-x-circle-fill"></i>
+    </a>
+    {% endif %}
+    {% if status == 'votou' %}
+    <a href="{{ url_for('admin.funcionarios', search=search, unidade=unidade_filtro) }}"
+       class="badge bg-success text-decoration-none d-inline-flex align-items-center gap-1"
+       style="padding:.35rem .65rem;font-size:.78rem;">
+        <i class="bi bi-check2-circle"></i> Já votaram <i class="bi bi-x-circle-fill"></i>
+    </a>
+    {% elif status == 'pendente' %}
+    <a href="{{ url_for('admin.funcionarios', search=search, unidade=unidade_filtro) }}"
+       class="badge text-decoration-none d-inline-flex align-items-center gap-1"
+       style="background:#fff7ed;color:#92400e;padding:.35rem .65rem;font-size:.78rem;">
+        <i class="bi bi-hourglass-split"></i> Pendentes <i class="bi bi-x-circle-fill"></i>
+    </a>
+    {% endif %}
+    {% if unidade_filtro %}
+    <a href="{{ url_for('admin.funcionarios', search=search, status=status) }}"
+       class="badge text-decoration-none d-inline-flex align-items-center gap-1"
+       style="background:#e6f7ee;color:#006b2b;padding:.35rem .65rem;font-size:.78rem;">
+        <i class="bi bi-geo-alt"></i> {{ unidade_filtro }} <i class="bi bi-x-circle-fill"></i>
+    </a>
+    {% endif %}
+    <a href="{{ url_for('admin.funcionarios') }}"
+       class="text-danger text-decoration-none" style="font-size:.8rem;">
+        <i class="bi bi-x-circle"></i> Limpar todos
+    </a>
+</div>
+{% endif %}
+
+{# ── Lista de funcionários ── #}
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Lista de Funcionários</span>
-        <span class="badge bg-success">{{ funcionarios|length }}</span>
+        <span class="badge bg-primary">
+            {{ pagination.total }} encontrado{{ 's' if pagination.total != 1 }}
+        </span>
     </div>
     <div class="card-body p-0">
         {% if funcionarios %}
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th class="text-muted" style="width:50px;">#</th>
                     <th>Matrícula</th>
                     <th>Nome</th>
                     <th>Unidade</th>
                     <th>Situação</th>
-                    <th style="width:80px;"></th>
+                    <th style="width:60px;"></th>
                 </tr>
             </thead>
             <tbody>
                 {% for f in funcionarios %}
                 <tr>
-                    <td class="text-muted">{{ loop.index }}</td>
+                    <td class="text-muted" style="font-size:.8rem;">
+                        {{ (pagination.page - 1) * pagination.per_page + loop.index }}
+                    </td>
                     <td>
                         <code style="background:#f3f4f6;padding:.2rem .5rem;border-radius:5px;font-size:.825rem;">
                             {{ f.matricula }}
@@ -101,10 +237,31 @@
         </table>
         {% else %}
         <div class="text-center py-5 text-muted">
+            {% if search or status or unidade_filtro %}
+            <i class="bi bi-search" style="font-size:2.5rem;opacity:.3;"></i>
+            <p class="mt-2 mb-2">Nenhum funcionário encontrado com os filtros atuais.</p>
+            <a href="{{ url_for('admin.funcionarios') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-circle"></i> Limpar filtros
+            </a>
+            {% else %}
             <i class="bi bi-person-badge" style="font-size:2.5rem;opacity:.3;"></i>
             <p class="mt-2 mb-0">Nenhum funcionário cadastrado ainda.</p>
+            {% endif %}
         </div>
         {% endif %}
     </div>
+    {% if pagination.pages > 1 %}
+    <div class="card-footer bg-white py-3">
+        {{ paginacao(pagination, 'admin.funcionarios', search=search, status=status, unidade=unidade_filtro) }}
+    </div>
+    {% endif %}
 </div>
+
+<script>
+const collapseEl = document.getElementById('formAdicionar');
+const icon = document.getElementById('iconAdicionar');
+collapseEl.addEventListener('show.bs.collapse', () => icon.className = 'bi bi-chevron-up text-muted');
+collapseEl.addEventListener('hide.bs.collapse', () => icon.className = 'bi bi-chevron-down text-muted');
+</script>
+
 {% endblock %}

@@ -1,5 +1,6 @@
 import os
 import base64
+import uuid
 import json
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash
@@ -12,8 +13,12 @@ app.secret_key = os.environ.get('SECRET_KEY', 'cipa2026_chave_secreta')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///cipa.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads')
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5 MB
 
 UNIDADES = [
     'UTD SOBRADINHO',
@@ -45,7 +50,7 @@ class Candidato(db.Model):
     nome = db.Column(db.String(100), nullable=False)
     cargo = db.Column(db.String(100), nullable=False)
     unidade = db.Column(db.String(50), nullable=True)
-    foto = db.Column(db.Text, nullable=True)
+    foto = db.Column(db.String(500), nullable=True)  # URL ou caminho relativo
     votos = db.relationship('Voto', backref='candidato', lazy=True, cascade='all, delete-orphan')
 
 
@@ -189,7 +194,7 @@ def adicionar_candidato():
         db.session.flush()
         file = request.files.get('foto')
         if file and file.filename and allowed_file(file.filename):
-            candidato.foto = _foto_para_base64(file)
+            candidato.foto = salvar_foto(file)
         db.session.commit()
         flash(f'Candidato adicionado em {unidade}!', 'success')
     return redirect(url_for('candidatos'))
@@ -204,28 +209,60 @@ def upload_foto(id):
         flash('Nenhum arquivo selecionado.', 'danger')
         return redirect(url_for('candidatos'))
     if not allowed_file(file.filename):
-        flash('Formato inválido. Use JPG ou PNG.', 'danger')
+        flash('Formato inválido. Use JPG, PNG ou GIF.', 'danger')
         return redirect(url_for('candidatos'))
-    candidato.foto = _foto_para_base64(file)
+    deletar_foto(candidato.foto)
+    candidato.foto = salvar_foto(file)
     db.session.commit()
     flash('Foto atualizada com sucesso!', 'success')
     return redirect(url_for('candidatos'))
 
 
-def _foto_para_base64(file):
+def salvar_foto(file):
     ext = file.filename.rsplit('.', 1)[1].lower()
-    mime = 'image/jpeg' if ext in ('jpg', 'jpeg') else f'image/{ext}'
-    data = base64.b64encode(file.read()).decode('utf-8')
-    return f'data:{mime};base64,{data}'
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(filepath)
+    return f"/static/uploads/{filename}"
+
+
+def deletar_foto(url):
+    if url and url.startswith('/static/uploads/'):
+        filepath = url.lstrip('/')
+        if os.path.isfile(filepath):
+            os.remove(filepath)
 
 
 @app.route('/admin/candidatos/remover/<int:id>')
 @login_required
 def remover_candidato(id):
     candidato = Candidato.query.get_or_404(id)
+    deletar_foto(candidato.foto)
     db.session.delete(candidato)
     db.session.commit()
     flash('Candidato removido.', 'warning')
+    return redirect(url_for('candidatos'))
+
+
+@app.route('/admin/migrar-fotos', methods=['POST'])
+@login_required
+def migrar_fotos():
+    count = 0
+    for candidato in Candidato.query.all():
+        if candidato.foto and candidato.foto.startswith('data:'):
+            try:
+                header, data = candidato.foto.split(',', 1)
+                ext = 'png' if 'png' in header else 'gif' if 'gif' in header else 'jpg'
+                filename = f"{uuid.uuid4().hex}.{ext}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                with open(filepath, 'wb') as f:
+                    f.write(base64.b64decode(data))
+                candidato.foto = f"/static/uploads/{filename}"
+                count += 1
+            except Exception:
+                pass
+    db.session.commit()
+    flash(f'{count} foto(s) migrada(s) para arquivos com sucesso.', 'success')
     return redirect(url_for('candidatos'))
 
 

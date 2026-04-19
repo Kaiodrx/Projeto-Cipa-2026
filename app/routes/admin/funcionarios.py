@@ -9,9 +9,41 @@ from ...utils import login_required
 @admin_bp.route('/funcionarios')
 @login_required
 def funcionarios():
-    return render_template('admin/funcionarios.html',
-                           funcionarios=Funcionario.query.order_by(Funcionario.unidade, Funcionario.nome).all(),
-                           unidades=UNIDADES)
+    search = request.args.get('search', '').strip()
+    status = request.args.get('status', '')
+    unidade_filtro = request.args.get('unidade', '')
+    page = request.args.get('page', 1, type=int)
+
+    query = Funcionario.query
+    if search:
+        query = query.filter(
+            db.or_(
+                Funcionario.nome.ilike(f'%{search}%'),
+                Funcionario.matricula.ilike(f'%{search}%'),
+            )
+        )
+    if status == 'votou':
+        query = query.filter_by(votou=True)
+    elif status == 'pendente':
+        query = query.filter_by(votou=False)
+    if unidade_filtro:
+        query = query.filter_by(unidade=unidade_filtro)
+
+    pagination = query.order_by(Funcionario.unidade, Funcionario.nome).paginate(
+        page=page, per_page=25, error_out=False
+    )
+    return render_template(
+        'admin/funcionarios.html',
+        funcionarios=pagination.items,
+        pagination=pagination,
+        unidades=UNIDADES,
+        search=search,
+        status=status,
+        unidade_filtro=unidade_filtro,
+        total_geral=Funcionario.query.count(),
+        total_votou=Funcionario.query.filter_by(votou=True).count(),
+        total_pendente=Funcionario.query.filter_by(votou=False).count(),
+    )
 
 
 @admin_bp.route('/funcionarios/adicionar', methods=['POST'])

@@ -27,8 +27,9 @@ def create_app(config_class=Config):
     app.register_blueprint(admin_bp)
     app.register_blueprint(public_bp)
 
-    with app.app_context():
-        _init_db()
+    if not app.config.get('TESTING'):
+        with app.app_context():
+            _init_db()
 
     return app
 

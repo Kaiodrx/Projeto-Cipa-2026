@@ -27,7 +27,7 @@
         {# Card de Votação — destaque total #}
         <div class="row justify-content-center mb-4">
             <div class="col-md-6 col-sm-9">
-                <a href="{{ url_for('login_votacao') }}" class="text-decoration-none">
+                <a href="{{ url_for('public.login_votacao') }}" class="text-decoration-none">
                     <div class="card hero-card text-center p-4">
                         <div class="card-body">
 <div class="d-inline-flex align-items-center justify-content-center rounded-3 mb-4"
@@ -52,7 +52,7 @@
             <p style="color:rgba(255,255,255,.35);font-size:.8rem;margin-bottom:.5rem;">
                 <i class="bi bi-lock-fill"></i> Voto sigiloso e seguro
             </p>
-            <a href="{{ url_for('login_admin') }}"
+            <a href="{{ url_for('admin.login_admin') }}"
                style="color:rgba(255,255,255,.25);font-size:.75rem;text-decoration:none;transition:color .2s;"
                onmouseover="this.style.color='rgba(255,255,255,.55)'"
                onmouseout="this.style.color='rgba(255,255,255,.25)'">

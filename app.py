@@ -1,5 +1,6 @@
 import os
 import base64
+import json
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -45,7 +46,7 @@ class Candidato(db.Model):
     cargo = db.Column(db.String(100), nullable=False)
     unidade = db.Column(db.String(50), nullable=True)
     foto = db.Column(db.Text, nullable=True)
-    votos = db.relationship('Voto', backref='candidato', lazy=True)
+    votos = db.relationship('Voto', backref='candidato', lazy=True, cascade='all, delete-orphan')
 
 
 class Funcionario(db.Model):
@@ -65,6 +66,13 @@ class Eleicao(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     unidade = db.Column(db.String(50), nullable=True)
     status = db.Column(db.String(20), default='fechada')
+
+
+class HistoricoEleicao(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(100), nullable=False)
+    data = db.Column(db.DateTime, default=datetime.utcnow)
+    dados = db.Column(db.Text, nullable=False)  # JSON com resultado completo
 
 
 # ── Proteção de rotas admin ────────────────────────────────────────────────────
@@ -366,6 +374,75 @@ def resultado():
                            total_votos_geral=total_votos_geral,
                            unidades=UNIDADES,
                            now=now)
+
+
+# ── Finalizar eleição e histórico ─────────────────────────────────────────────
+
+@app.route('/admin/resultado/finalizar', methods=['POST'])
+@login_required
+def finalizar_eleicao():
+    titulo = request.form.get('titulo', '').strip() or f'Eleição CIPA 2026 — {datetime.now().strftime("%d/%m/%Y")}'
+    unidades_dados = []
+    total_geral = 0
+    for unidade in UNIDADES:
+        candidatos_u = Candidato.query.filter_by(unidade=unidade).all()
+        dados_u = sorted([(c.nome, c.foto, len(c.votos)) for c in candidatos_u], key=lambda x: x[2], reverse=True)
+        total_u = sum(v for _, _, v in dados_u)
+        total_geral += total_u
+        unidades_dados.append({
+            'unidade': unidade,
+            'total_votos': total_u,
+            'votaram': Funcionario.query.filter_by(unidade=unidade, votou=True).count(),
+            'total_funcionarios': Funcionario.query.filter_by(unidade=unidade).count(),
+            'candidatos': [
+                {
+                    'nome': nome,
+                    'foto': foto,
+                    'votos': votos,
+                    'pct': round(votos / total_u * 100, 1) if total_u > 0 else 0,
+                }
+                for nome, foto, votos in dados_u
+            ],
+        })
+    snapshot = {
+        'titulo': titulo,
+        'data': datetime.now().strftime('%d/%m/%Y às %H:%M'),
+        'total_geral': total_geral,
+        'unidades': unidades_dados,
+    }
+    db.session.add(HistoricoEleicao(titulo=titulo, dados=json.dumps(snapshot)))
+    Voto.query.delete()
+    Funcionario.query.update({'votou': False})
+    for e in Eleicao.query.all():
+        e.status = 'fechada'
+    db.session.commit()
+    flash('Eleição finalizada e salva no histórico com sucesso!', 'success')
+    return redirect(url_for('historico'))
+
+
+@app.route('/admin/historico')
+@login_required
+def historico():
+    registros = HistoricoEleicao.query.order_by(HistoricoEleicao.data.desc()).all()
+    return render_template('admin/historico.html', registros=registros)
+
+
+@app.route('/admin/historico/<int:id>')
+@login_required
+def ver_historico(id):
+    registro = HistoricoEleicao.query.get_or_404(id)
+    snapshot = json.loads(registro.dados)
+    return render_template('admin/historico_detalhe.html', registro=registro, snapshot=snapshot)
+
+
+@app.route('/admin/historico/<int:id>/excluir', methods=['POST'])
+@login_required
+def excluir_historico(id):
+    registro = HistoricoEleicao.query.get_or_404(id)
+    db.session.delete(registro)
+    db.session.commit()
+    flash('Registro removido do histórico.', 'warning')
+    return redirect(url_for('historico'))
 
 
 # ── Votação pública ────────────────────────────────────────────────────────────

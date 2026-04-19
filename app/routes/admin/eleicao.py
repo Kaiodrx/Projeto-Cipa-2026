@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash
 from . import admin_bp
 from ...extensions import db
 from ...models import Candidato, Funcionario, Eleicao
@@ -9,14 +9,29 @@ from ...utils import login_required
 @admin_bp.route('/eleicao')
 @login_required
 def gerenciar_eleicao():
+    status_filtro = request.args.get('status', '')
     eleicoes = {e.unidade: e for e in Eleicao.query.all()}
+    total_abertas = sum(1 for e in eleicoes.values() if e.status == 'aberta')
+
+    if status_filtro == 'aberta':
+        unidades_visiveis = [u for u in UNIDADES if eleicoes.get(u) and eleicoes[u].status == 'aberta']
+    elif status_filtro == 'fechada':
+        unidades_visiveis = [u for u in UNIDADES if not eleicoes.get(u) or eleicoes[u].status != 'aberta']
+    else:
+        unidades_visiveis = UNIDADES
+
     candidatos_por_unidade = {u: Candidato.query.filter_by(unidade=u).all() for u in UNIDADES}
     funcionarios_por_unidade = {u: Funcionario.query.filter_by(unidade=u).count() for u in UNIDADES}
-    return render_template('admin/eleicao.html',
-                           eleicoes=eleicoes,
-                           candidatos_por_unidade=candidatos_por_unidade,
-                           funcionarios_por_unidade=funcionarios_por_unidade,
-                           unidades=UNIDADES)
+    return render_template(
+        'admin/eleicao.html',
+        eleicoes=eleicoes,
+        candidatos_por_unidade=candidatos_por_unidade,
+        funcionarios_por_unidade=funcionarios_por_unidade,
+        unidades=unidades_visiveis,
+        total_unidades=len(UNIDADES),
+        total_abertas=total_abertas,
+        status_filtro=status_filtro,
+    )
 
 
 @admin_bp.route('/eleicao/abrir-todas')

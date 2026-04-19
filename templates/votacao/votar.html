@@ -18,6 +18,7 @@
             </div>
         </div>
 
+        {% if candidatos %}
         <form method="POST">
             {% for c in candidatos %}
             <div class="form-check candidato-card mb-3">
@@ -53,6 +54,21 @@
                 </button>
             </div>
         </form>
+        {% else %}
+        <div class="card text-center py-5 mb-4">
+            <div class="card-body">
+                <i class="bi bi-person-x" style="font-size:3rem;color:#d1d5db;"></i>
+                <h6 class="mt-3 fw-semibold text-muted">Nenhum candidato disponível</h6>
+                <p class="text-muted mb-3" style="font-size:.875rem;">
+                    Ainda não há candidatos cadastrados para a sua unidade.<br>
+                    Aguarde o início da votação ou entre em contato com a organização.
+                </p>
+                <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar ao início
+                </a>
+            </div>
+        </div>
+        {% endif %}
 
     </div>
 </div>

@@ -18,8 +18,8 @@
         <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Voltar
         </a>
-        <button onclick="window.print()" class="btn btn-outline-secondary">
-            <i class="bi bi-printer"></i> Imprimir
+        <button data-bs-toggle="modal" data-bs-target="#modalImprimir" class="btn btn-outline-secondary">
+            <i class="bi bi-printer"></i> Imprimir / Salvar PDF
         </button>
     </div>
 </div>
@@ -45,7 +45,7 @@
 
 {% for unidade in unidades %}
 {% set dados_u = resultado_por_unidade[unidade] %}
-<div class="card mb-4">
+<div class="card mb-4" data-unidade="{{ unidade }}">
     <div class="card-header d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-geo-alt-fill" style="color:#00AA44;"></i>
@@ -186,11 +186,89 @@
     </div>
 </div>
 
+{# ── Modal de seleção de unidades para impressão ── #}
+<div class="modal fade" id="modalImprimir" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold"><i class="bi bi-printer me-2"></i>Selecionar Unidades</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3" style="font-size:.9rem;">
+                    Escolha quais unidades devem aparecer no relatório PDF:
+                </p>
+                <div class="form-check mb-3 border-bottom pb-2">
+                    <input class="form-check-input" type="checkbox" id="checkTodasUnidades" checked>
+                    <label class="form-check-label fw-semibold" for="checkTodasUnidades">
+                        Todas as unidades
+                    </label>
+                </div>
+                {% for unidade in unidades %}
+                <div class="form-check">
+                    <input class="form-check-input check-unidade" type="checkbox"
+                           value="{{ unidade }}" id="check_{{ loop.index }}" checked>
+                    <label class="form-check-label" for="check_{{ loop.index }}">{{ unidade }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary fw-semibold" id="btnGerarPDF">
+                    <i class="bi bi-file-earmark-pdf"></i> Gerar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
 @media print {
     body { background: #fff; font-size: 10pt; }
     .card { border: 1px solid #ccc !important; box-shadow: none !important; page-break-inside: avoid; }
     .table-success td { background-color: #d1fae5 !important; -webkit-print-color-adjust: exact; }
+    .unidade-oculta { display: none !important; }
 }
 </style>
+
+<script>
+(function () {
+    const checkTodas = document.getElementById('checkTodasUnidades');
+    const checksUnidade = document.querySelectorAll('.check-unidade');
+
+    // "Todas" marca/desmarca todas as individuais
+    checkTodas.addEventListener('change', function () {
+        checksUnidade.forEach(c => c.checked = this.checked);
+    });
+
+    // Se desmarcar uma individual, desmarca "Todas"
+    checksUnidade.forEach(function (c) {
+        c.addEventListener('change', function () {
+            checkTodas.checked = [...checksUnidade].every(c => c.checked);
+        });
+    });
+
+    document.getElementById('btnGerarPDF').addEventListener('click', function () {
+        const selecionadas = [...checksUnidade].filter(c => c.checked).map(c => c.value);
+
+        // Mostra/oculta os cards de unidade conforme seleção
+        document.querySelectorAll('[data-unidade]').forEach(function (el) {
+            if (selecionadas.includes(el.dataset.unidade)) {
+                el.classList.remove('unidade-oculta');
+            } else {
+                el.classList.add('unidade-oculta');
+            }
+        });
+
+        bootstrap.Modal.getInstance(document.getElementById('modalImprimir')).hide();
+
+        // Aguarda o modal fechar antes de imprimir
+        setTimeout(function () {
+            window.print();
+            // Restaura todos os cards após a impressão
+            document.querySelectorAll('[data-unidade]').forEach(el => el.classList.remove('unidade-oculta'));
+        }, 400);
+    });
+})();
+</script>
 {% endblock %}

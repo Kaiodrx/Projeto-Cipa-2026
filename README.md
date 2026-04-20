@@ -282,6 +282,8 @@ pytest tests/test_votacao.py -v
 | `test_eleicao.py` | Abrir/fechar individual e em massa, rota inválida (404) |
 | `test_funcionarios.py` | Cadastro, matrícula duplicada, remoção, acesso não autenticado |
 | `test_votacao.py` | Voto válido, duplicado, eleição fechada, matrícula inválida, resultado |
+| `test_candidatos.py` | Cadastro, rejeição sem nome/unidade, listagem, remoção, acesso não autenticado |
+| `test_historico.py` | Listagem, detalhe, vencedor por unidade, exclusão, rotas inexistentes (404), acesso não autenticado |
 
 ### Estratégia de isolamento
 
@@ -332,7 +334,7 @@ O projeto está configurado para deploy automático no [Railway](https://railway
 - [ ] Dashboard com gráficos de participação em tempo real
 
 ### Qualidade
-- [ ] Aumentar cobertura de testes para incluir candidatos e histórico
+- [x] Aumentar cobertura de testes para incluir candidatos e histórico
 - [ ] Adicionar testes de integração end-to-end (ex: Playwright ou Selenium)
 - [ ] Configurar CI/CD com GitHub Actions para rodar testes a cada push
 

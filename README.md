@@ -57,6 +57,7 @@ Dependências Python (ver `requirements.txt`):
 | Gunicorn | 21.2.0 | Servidor WSGI para produção |
 | pytest | 8.3.5 | Framework de testes |
 | pytest-cov | 6.1.0 | Relatório de cobertura de testes |
+| openpyxl | 3.1.5 | Leitura e geração de arquivos Excel (.xlsx) |
 
 ---
 
@@ -214,8 +215,9 @@ Projeto-Cipa-2026/
 │   ├── conftest.py             # Fixtures compartilhadas (app, db, client, domínio)
 │   ├── test_auth.py            # Testes de autenticação do admin
 │   ├── test_eleicao.py         # Testes de abertura/fechamento de eleições
-│   ├── test_funcionarios.py    # Testes de CRUD de funcionários
-│   └── test_votacao.py         # Testes do fluxo de votação e resultado
+│   ├── test_funcionarios.py         # Testes de CRUD de funcionários
+│   ├── test_upload_funcionarios.py  # Testes de importação via planilha Excel
+│   └── test_votacao.py              # Testes do fluxo de votação e resultado
 │
 └── instance/
     └── cipa.db                 # Banco SQLite (gerado automaticamente, não versionar)
@@ -284,6 +286,7 @@ pytest tests/test_votacao.py -v
 | `test_votacao.py` | Voto válido, duplicado, eleição fechada, matrícula inválida, resultado |
 | `test_candidatos.py` | Cadastro, rejeição sem nome/unidade, listagem, remoção, acesso não autenticado |
 | `test_historico.py` | Listagem, detalhe, vencedor por unidade, exclusão, rotas inexistentes (404), acesso não autenticado |
+| `test_upload_funcionarios.py` | Importação via planilha Excel: upload válido, atualização de existentes, planilha mista, arquivo inválido, linhas incompletas, download do modelo, acesso não autenticado |
 
 ### Estratégia de isolamento
 

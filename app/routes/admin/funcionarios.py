@@ -1,4 +1,6 @@
-from flask import render_template, request, redirect, url_for, flash
+import io
+from flask import render_template, request, redirect, url_for, flash, send_file
+from openpyxl import load_workbook, Workbook
 from . import admin_bp
 from ...extensions import db
 from ...models import Funcionario
@@ -59,6 +61,87 @@ def adicionar_funcionario():
             db.session.add(Funcionario(matricula=matricula, nome=nome, unidade=unidade))
             db.session.commit()
             flash(f'Funcionário adicionado em {unidade}!', 'success')
+    return redirect(url_for('admin.funcionarios'))
+
+
+@admin_bp.route('/funcionarios/modelo')
+@login_required
+def modelo_funcionarios():
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Funcionarios'
+    ws.append(['matricula', 'nome', 'unidade'])
+    ws.append(['00001', 'João da Silva', 'Unidade A'])
+    ws.append(['00002', 'Maria Oliveira', 'Unidade B'])
+
+    col_widths = {'A': 14, 'B': 40, 'C': 30}
+    for col, width in col_widths.items():
+        ws.column_dimensions[col].width = width
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return send_file(
+        buf,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='modelo_funcionarios.xlsx',
+    )
+
+
+@admin_bp.route('/funcionarios/importar', methods=['POST'])
+@login_required
+def importar_funcionarios():
+    arquivo = request.files.get('planilha')
+    if not arquivo or not arquivo.filename.endswith('.xlsx'):
+        flash('Envie um arquivo Excel (.xlsx) válido.', 'danger')
+        return redirect(url_for('admin.funcionarios'))
+
+    try:
+        wb = load_workbook(arquivo, read_only=True, data_only=True)
+        ws = wb.active
+        adicionados = atualizados = erros = 0
+
+        for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            if not any(row):
+                continue
+            if len(row) < 3:
+                erros += 1
+                continue
+
+            matricula = str(row[0]).strip() if row[0] is not None else ''
+            nome = str(row[1]).strip() if row[1] is not None else ''
+            unidade = str(row[2]).strip() if row[2] is not None else ''
+
+            if not matricula or not nome or not unidade:
+                erros += 1
+                continue
+
+            existente = Funcionario.query.filter_by(matricula=matricula).first()
+            if existente:
+                existente.nome = nome
+                existente.unidade = unidade
+                atualizados += 1
+            else:
+                db.session.add(Funcionario(matricula=matricula, nome=nome, unidade=unidade))
+                adicionados += 1
+
+        db.session.commit()
+
+        partes = []
+        if adicionados:
+            partes.append(f'{adicionados} adicionado(s)')
+        if atualizados:
+            partes.append(f'{atualizados} atualizado(s)')
+        if erros:
+            partes.append(f'{erros} linha(s) ignorada(s) por dado inválido')
+
+        flash('Importação concluída: ' + ', '.join(partes) + '.', 'success' if not erros or adicionados or atualizados else 'warning')
+
+    except Exception:
+        db.session.rollback()
+        flash('Erro ao processar a planilha. Verifique se o arquivo está no formato correto.', 'danger')
+
     return redirect(url_for('admin.funcionarios'))
 
 

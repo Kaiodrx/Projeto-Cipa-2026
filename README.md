@@ -287,6 +287,7 @@ pytest tests/test_votacao.py -v
 | `test_candidatos.py` | Cadastro, rejeição sem nome/unidade, listagem, remoção, acesso não autenticado |
 | `test_historico.py` | Listagem, detalhe, vencedor por unidade, exclusão, rotas inexistentes (404), acesso não autenticado |
 | `test_upload_funcionarios.py` | Importação via planilha Excel: upload válido, atualização de existentes, planilha mista, arquivo inválido, linhas incompletas, download do modelo, acesso não autenticado |
+| `test_concorrencia.py` | Configuração de workers no deploy, múltiplos votantes em sequência, proteção contra voto duplo |
 
 ### Estratégia de isolamento
 
@@ -300,8 +301,8 @@ O projeto está configurado para deploy automático no [Railway](https://railway
 
 ### Arquivos de configuração
 
-- **`Procfile`**: `web: gunicorn run:app --bind 0.0.0.0:$PORT`
-- **`railway.toml`**: define builder Nixpacks, comando de start e healthcheck em `/`
+- **`Procfile`**: `web: gunicorn run:app --bind 0.0.0.0:$PORT --workers 5`
+- **`railway.toml`**: define builder Nixpacks, comando de start com 5 workers e healthcheck em `/`
 
 ### Variáveis obrigatórias no painel do Railway
 

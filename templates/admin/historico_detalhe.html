@@ -28,29 +28,9 @@
     </div>
 </div>
 
-{# Cards de resumo #}
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="row g-3 text-center">
-            <div class="col-md-4">
-                <div class="fw-bold" style="font-size:1.75rem;color:#00AA44;">{{ snapshot.total_geral }}</div>
-                <div class="text-muted" style="font-size:.825rem;">Total de Votos</div>
-            </div>
-            <div class="col-md-4">
-                <div class="fw-bold" style="font-size:1.75rem;color:#003399;">{{ snapshot.unidades | length }}</div>
-                <div class="text-muted" style="font-size:.825rem;">Unidades</div>
-            </div>
-            <div class="col-md-4">
-                <div class="fw-bold" style="font-size:1.1rem;color:#F7941D;">{{ snapshot.data }}</div>
-                <div class="text-muted" style="font-size:.825rem;">Data da eleição</div>
-            </div>
-        </div>
-    </div>
-</div>
-
 {# Resultado por unidade #}
 {% for u in snapshot.unidades %}
-<div class="card mb-4">
+<div class="card mb-4" data-unidade="{{ u.unidade }}">
     <div class="card-header d-flex align-items-center justify-content-between">
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-geo-alt-fill" style="color:#00AA44;"></i>
@@ -131,7 +111,9 @@
 <style>
 @media print {
     body { background: #fff; font-size: 10pt; }
-    .card { border: 1px solid #ccc !important; box-shadow: none !important; page-break-inside: avoid; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    .card[data-unidade] { break-before: page; }
+    .card[data-unidade]:first-of-type { break-before: auto; }
     .table-success td { background-color: #d1fae5 !important; -webkit-print-color-adjust: exact; }
 }
 </style>

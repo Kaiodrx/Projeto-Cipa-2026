@@ -100,9 +100,13 @@ def importar_funcionarios():
     try:
         wb = load_workbook(arquivo, read_only=True, data_only=True)
         ws = wb.active
+
+        # Carrega todos os funcionários existentes de uma vez (1 consulta, qualquer tamanho)
+        existentes = {f.matricula: f for f in Funcionario.query.all()}
+        unidades_validas = set(UNIDADES)
         adicionados = atualizados = erros = 0
 
-        for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        for row in ws.iter_rows(min_row=2, values_only=True):
             if not any(row):
                 continue
             if len(row) < 3:
@@ -117,16 +121,22 @@ def importar_funcionarios():
                 erros += 1
                 continue
 
-            existente = Funcionario.query.filter_by(matricula=matricula).first()
-            if existente:
-                existente.nome = nome
-                existente.unidade = unidade
+            if unidade not in unidades_validas:
+                erros += 1
+                continue
+
+            if matricula in existentes:
+                existentes[matricula].nome = nome
+                existentes[matricula].unidade = unidade
                 atualizados += 1
             else:
-                db.session.add(Funcionario(matricula=matricula, nome=nome, unidade=unidade))
+                novo = Funcionario(matricula=matricula, nome=nome, unidade=unidade)
+                db.session.add(novo)
+                existentes[matricula] = novo  # evita duplicatas dentro da mesma planilha
                 adicionados += 1
 
         db.session.commit()
+        wb.close()
 
         partes = []
         if adicionados:

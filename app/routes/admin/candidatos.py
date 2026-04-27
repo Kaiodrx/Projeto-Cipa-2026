@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from . import admin_bp
 from ...extensions import db
-from ...models import Candidato
+from ...models import Candidato, HistoricoEleicao
 from ...constants import UNIDADES
 from ...services.foto import allowed_file, salvar_foto, deletar_foto, migrar_base64
 from ...utils import login_required
@@ -73,9 +73,14 @@ def upload_foto(id):
 @login_required
 def remover_candidato(id):
     candidato = Candidato.query.get_or_404(id)
-    deletar_foto(candidato.foto)
+    foto = candidato.foto
     db.session.delete(candidato)
     db.session.commit()
+    foto_em_historico = foto and HistoricoEleicao.query.filter(
+        HistoricoEleicao.dados.like(f'%{foto}%')
+    ).first()
+    if not foto_em_historico:
+        deletar_foto(foto)
     flash('Candidato removido.', 'warning')
     return redirect(url_for('admin.candidatos'))
 

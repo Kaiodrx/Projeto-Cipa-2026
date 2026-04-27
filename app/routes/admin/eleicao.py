@@ -54,9 +54,10 @@ def fechar_todas():
     return redirect(url_for('admin.gerenciar_eleicao'))
 
 
-@admin_bp.route('/eleicao/<unidade>/abrir')
+@admin_bp.route('/eleicao/abrir', methods=['POST'])
 @login_required
-def abrir_eleicao(unidade):
+def abrir_eleicao():
+    unidade = request.form.get('unidade', '').strip()
     eleicao = Eleicao.query.filter_by(unidade=unidade).first_or_404()
     eleicao.status = 'aberta'
     db.session.commit()
@@ -64,9 +65,10 @@ def abrir_eleicao(unidade):
     return redirect(url_for('admin.gerenciar_eleicao'))
 
 
-@admin_bp.route('/eleicao/<unidade>/fechar')
+@admin_bp.route('/eleicao/fechar', methods=['POST'])
 @login_required
-def fechar_eleicao(unidade):
+def fechar_eleicao():
+    unidade = request.form.get('unidade', '').strip()
     eleicao = Eleicao.query.filter_by(unidade=unidade).first_or_404()
     eleicao.status = 'fechada'
     db.session.commit()

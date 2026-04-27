@@ -145,17 +145,21 @@
         {# Botão de controle individual #}
         <div class="card-footer bg-white border-top-0 pt-0 pb-3 px-3">
             {% if aberta %}
-            <a href="{{ url_for('admin.fechar_eleicao', unidade=unidade) }}"
-               class="btn btn-danger w-100"
-               onclick="return confirm('Encerrar eleição em {{ unidade }}?')">
-                <i class="bi bi-stop-circle"></i> Encerrar esta unidade
-            </a>
+            <form method="POST" action="{{ url_for('admin.fechar_eleicao') }}"
+                  onsubmit="return confirm('Encerrar eleição em {{ unidade }}?')">
+                <input type="hidden" name="unidade" value="{{ unidade }}">
+                <button type="submit" class="btn btn-danger w-100">
+                    <i class="bi bi-stop-circle"></i> Encerrar esta unidade
+                </button>
+            </form>
             {% else %}
-            <a href="{{ url_for('admin.abrir_eleicao', unidade=unidade) }}"
-               class="btn btn-success w-100"
-               onclick="return confirm('Abrir eleição em {{ unidade }}?')">
-                <i class="bi bi-play-circle"></i> Abrir esta unidade
-            </a>
+            <form method="POST" action="{{ url_for('admin.abrir_eleicao') }}"
+                  onsubmit="return confirm('Abrir eleição em {{ unidade }}?')">
+                <input type="hidden" name="unidade" value="{{ unidade }}">
+                <button type="submit" class="btn btn-success w-100">
+                    <i class="bi bi-play-circle"></i> Abrir esta unidade
+                </button>
+            </form>
             {% endif %}
         </div>
 

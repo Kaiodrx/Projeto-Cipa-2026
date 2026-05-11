@@ -6,6 +6,7 @@ UNIDADES = [
     'UTD TAGUATINGA',
     'UTD LAGO SUL',
     'UTD SÃO SEBASTIÃO',
+    'UTD GAMA',
 ]
 
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'gif'}

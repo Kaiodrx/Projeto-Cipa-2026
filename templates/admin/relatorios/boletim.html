@@ -1,0 +1,114 @@
+{% extends 'base_admin.html' %}
+{% block title %}Boletim da Urna — {{ unidade }} — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <div>
+        <h4 class="fw-bold mb-0">Boletim da Urna — {{ unidade }}</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Gerado em: {{ now }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a href="{{ url_for('admin.relatorios_unidade', unidade=unidade) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="d-none d-print-block text-center mb-4">
+    <h2 class="fw-bold">BOLETIM DA URNA — ELEIÇÃO CIPA 2026</h2>
+    <h4>{{ unidade }}</h4>
+    <p>Gerado em: {{ now }}</p>
+    <hr>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header fw-semibold">Resumo da Apuração</div>
+    <div class="card-body">
+        <table class="table table-sm mb-0">
+            <tr><td class="text-muted" style="width:250px;">Unidade</td><td><strong>{{ unidade }}</strong></td></tr>
+            <tr>
+                <td class="text-muted">Status da Eleição</td>
+                <td>
+                    <span class="badge {{ 'bg-success' if resultado.eleicao and resultado.eleicao.status == 'aberta' else 'bg-danger' }}">
+                        {{ resultado.eleicao.status | upper if resultado.eleicao else 'N/D' }}
+                    </span>
+                </td>
+            </tr>
+            {% if resultado.eleicao and resultado.eleicao.data_encerramento %}
+            <tr>
+                <td class="text-muted">Data/Hora de Encerramento</td>
+                <td>{{ resultado.eleicao.data_encerramento.strftime('%d/%m/%Y às %H:%M') }}</td>
+            </tr>
+            {% endif %}
+            <tr><td class="text-muted">Data/Hora de Emissão</td><td>{{ now }}</td></tr>
+            <tr><td class="text-muted">Total de Eleitores Ativos</td><td>{{ resultado.total_eleitores }}</td></tr>
+            <tr><td class="text-muted">Total de Votantes</td><td>{{ resultado.total_votantes }}</td></tr>
+            <tr><td class="text-muted">Total de Não Votantes</td><td>{{ resultado.total_nao_votantes }}</td></tr>
+            <tr><td class="text-muted">Total de Votos Computados</td><td><strong>{{ resultado.total_votos }}</strong></td></tr>
+            <tr>
+                <td class="text-muted">Percentual de Participação</td>
+                <td><strong>{{ resultado.pct_participacao }}%</strong></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Dimensionamento (GR3)</td>
+                <td>{{ resultado.n_titulares }} Titular(es) / {{ resultado.n_suplentes }} Suplente(s)</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header fw-semibold">Votos por Candidato — Classificação Final</div>
+    <div class="card-body p-0">
+        {% if resultado.candidatos %}
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Pos.</th>
+                    <th>Candidato</th>
+                    <th class="text-center">Votos</th>
+                    <th class="text-center">%</th>
+                    <th>Situação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in resultado.candidatos %}
+                <tr>
+                    <td class="text-muted">{{ item.posicao }}º</td>
+                    <td>{{ item.candidato.nome }}</td>
+                    <td class="text-center fw-bold">{{ item.votos }}</td>
+                    <td class="text-center">{{ item.pct }}%</td>
+                    <td>
+                        {% if item.situacao == 'Titular' %}
+                        <span class="badge bg-success">Titular</span>
+                        {% elif item.situacao == 'Suplente' %}
+                        <span class="badge bg-primary">Suplente</span>
+                        {% else %}
+                        <span class="badge bg-secondary">Não eleito</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-4 text-muted">Nenhum candidato cadastrado.</div>
+        {% endif %}
+    </div>
+</div>
+
+<p class="text-muted mt-3" style="font-size:.8rem;">
+    Boletim gerado em {{ now }} — Sistema de Votação CIPA 2026 — Neoenergia Brasília.
+</p>
+
+<style>
+@media print {
+    body { font-size: 10pt; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+}
+</style>
+{% endblock %}

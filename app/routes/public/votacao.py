@@ -21,6 +21,8 @@ def login_votacao():
             flash('Matrícula não encontrada.', 'danger')
         elif funcionario.unidade != unidade:
             flash('Unidade incorreta para esta matrícula.', 'danger')
+        elif funcionario.ativo is False:
+            flash('Você não está habilitado a votar nesta eleição.', 'danger')
         elif funcionario.votou:
             flash('Você já votou nesta eleição.', 'warning')
         elif not eleicao or eleicao.status != 'aberta':
@@ -47,7 +49,7 @@ def votar():
     if request.method == 'POST':
         candidato_id = request.form.get('candidato_id')
         if candidato_id:
-            db.session.add(Voto(candidato_id=int(candidato_id)))
+            db.session.add(Voto(candidato_id=int(candidato_id), funcionario_id=funcionario.id))
             funcionario.votou = True
             db.session.commit()
             session.pop('funcionario_id', None)

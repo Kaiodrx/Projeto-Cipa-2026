@@ -1,6 +1,6 @@
 """
 Testes de gerenciamento de eleições.
-Cobre: abrir/fechar individual, abrir/fechar todas, proteção de rota.
+Cobre: abrir/fechar individual (GET com path param), abrir/fechar todas, proteção de rota.
 """
 import pytest
 from app.extensions import db as _db
@@ -24,6 +24,13 @@ def test_abrir_eleicao_individual(logged_in_client, db):
     assert eleicao.status == 'aberta'
 
 
+def test_abrir_eleicao_registra_data_abertura(logged_in_client, db):
+    logged_in_client.get(f'/admin/eleicao/{UNIDADE}/abrir')
+    _db.session.expire_all()
+    eleicao = Eleicao.query.filter_by(unidade=UNIDADE).first()
+    assert eleicao.data_abertura is not None
+
+
 def test_fechar_eleicao_individual(logged_in_client, db, eleicao_aberta):
     resp = logged_in_client.get(
         f'/admin/eleicao/{UNIDADE}/fechar',
@@ -34,6 +41,13 @@ def test_fechar_eleicao_individual(logged_in_client, db, eleicao_aberta):
     _db.session.expire_all()
     eleicao = Eleicao.query.filter_by(unidade=UNIDADE).first()
     assert eleicao.status == 'fechada'
+
+
+def test_fechar_eleicao_registra_data_encerramento(logged_in_client, db, eleicao_aberta):
+    logged_in_client.get(f'/admin/eleicao/{UNIDADE}/fechar')
+    _db.session.expire_all()
+    eleicao = Eleicao.query.filter_by(unidade=UNIDADE).first()
+    assert eleicao.data_encerramento is not None
 
 
 def test_abrir_eleicao_exibe_flash_sucesso(logged_in_client, db):
@@ -68,9 +82,7 @@ def test_abrir_todas_abre_todas_as_unidades(logged_in_client, db):
 
 
 def test_fechar_todas_fecha_todas_as_unidades(logged_in_client, db):
-    # Garante que há ao menos uma aberta antes de fechar todas
     logged_in_client.get('/admin/eleicao/abrir-todas')
-
     logged_in_client.get('/admin/eleicao/fechar-todas', follow_redirects=True)
 
     _db.session.expire_all()
@@ -81,6 +93,18 @@ def test_fechar_todas_fecha_todas_as_unidades(logged_in_client, db):
 def test_abrir_todas_exibe_flash_sucesso(logged_in_client, db):
     resp = logged_in_client.get('/admin/eleicao/abrir-todas', follow_redirects=True)
     assert 'abertas' in resp.data.decode().lower()
+
+
+# ── Página de administração ───────────────────────────────────────────────────
+
+def test_pagina_admin_eleicao_retorna_200(logged_in_client, db):
+    resp = logged_in_client.get('/admin/eleicao')
+    assert resp.status_code == 200
+
+
+def test_pagina_admin_eleicao_exibe_dimensionamento(logged_in_client, db):
+    resp = logged_in_client.get('/admin/eleicao')
+    assert 'dimensionamento' in resp.data.decode().lower() or 'Dimensionamento' in resp.data.decode()
 
 
 # ── Proteção de rota ───────────────────────────────────────────────────────────

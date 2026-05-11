@@ -22,9 +22,9 @@
                    href="{{ url_for('admin.funcionarios') }}">
                     <i class="bi bi-person-badge"></i> Funcionários
                 </a>
-                <a class="nav-link {% if request.endpoint == 'admin.gerenciar_eleicao' %}active{% endif %}"
+                <a class="nav-link {% if request.endpoint in ('admin.gerenciar_eleicao', 'admin.apuracao_unidade', 'admin.relatorios_unidade', 'admin.zeresima', 'admin.boletim_urna', 'admin.lista_eleitos', 'admin.classificacao_candidatos', 'admin.cartaz_eleitos', 'admin.lista_votantes', 'admin.lista_nao_votantes', 'admin.lista_eleitores') %}active{% endif %}"
                    href="{{ url_for('admin.gerenciar_eleicao') }}">
-                    <i class="bi bi-ballot"></i> Eleição
+                    <i class="bi bi-ballot"></i> Adm. Eleição
                 </a>
                 <a class="nav-link {% if request.endpoint == 'admin.participacao' %}active{% endif %}"
                    href="{{ url_for('admin.participacao') }}">

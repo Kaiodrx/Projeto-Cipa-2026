@@ -1,0 +1,223 @@
+{% extends 'base_admin.html' %}
+{% block title %}Apuração — {{ resultado.unidade }} — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+{% set eleicao = resultado.eleicao %}
+{% set aberta = eleicao and eleicao.status == 'aberta' %}
+
+{# ── Cabeçalho ── #}
+<div class="d-flex align-items-start justify-content-between mb-4 flex-wrap gap-3 d-print-none">
+    <div>
+        <h4 class="fw-bold mb-0">Apuração — {{ resultado.unidade }}</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">
+            {% if aberta %}
+            <span class="badge bg-success me-1">ELEIÇÃO ABERTA</span> Resultado parcial em tempo real
+            {% else %}
+            <span class="badge bg-danger me-1">ELEIÇÃO ENCERRADA</span>
+            {% if eleicao and eleicao.data_encerramento %}
+                Encerrada em {{ eleicao.data_encerramento.strftime('%d/%m/%Y às %H:%M') }}
+            {% endif %}
+            {% endif %}
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('admin.relatorios_unidade', unidade=resultado.unidade) }}"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-file-text"></i> Relatórios
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a href="{{ url_for('admin.gerenciar_eleicao') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+{# ── Cabeçalho para impressão ── #}
+<div class="d-none d-print-block text-center mb-4">
+    <h2 class="fw-bold">Apuração Oficial — Eleição CIPA 2026</h2>
+    <h4>{{ resultado.unidade }}</h4>
+    <p class="text-muted">
+        {% if eleicao and eleicao.data_encerramento %}
+            Encerrada em {{ eleicao.data_encerramento.strftime('%d/%m/%Y às %H:%M') }}
+        {% endif %}
+    </p>
+    <hr>
+</div>
+
+{# ── Cards de resumo ── #}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="stat-card stat-blue">
+            <div class="stat-icon"><i class="bi bi-people"></i></div>
+            <div class="stat-value">{{ resultado.total_eleitores }}</div>
+            <div class="stat-label">Eleitores Ativos</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card stat-green">
+            <div class="stat-icon"><i class="bi bi-check2-circle"></i></div>
+            <div class="stat-value">{{ resultado.total_votantes }}</div>
+            <div class="stat-label">Votaram</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card stat-amber">
+            <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
+            <div class="stat-value">{{ resultado.total_nao_votantes }}</div>
+            <div class="stat-label">Não Votaram</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="stat-card" style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);">
+            <div class="stat-icon"><i class="bi bi-percent"></i></div>
+            <div class="stat-value">{{ resultado.pct_participacao }}%</div>
+            <div class="stat-label">Participação</div>
+        </div>
+    </div>
+</div>
+
+{# ── Dimensionamento ── #}
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <i class="bi bi-diagram-3 fs-4 text-primary"></i>
+            <div>
+                <div class="fw-semibold mb-1">Dimensionamento CIPA — Grau de Risco 3</div>
+                <div class="d-flex gap-3 flex-wrap">
+                    <span>
+                        <span class="badge bg-primary fs-6 px-3">{{ resultado.n_titulares }}</span>
+                        <span class="ms-1 text-muted" style="font-size:.85rem;">vagas de Titular</span>
+                    </span>
+                    <span>
+                        <span class="badge bg-secondary fs-6 px-3">{{ resultado.n_suplentes }}</span>
+                        <span class="ms-1 text-muted" style="font-size:.85rem;">vagas de Suplente</span>
+                    </span>
+                    <span class="text-muted" style="font-size:.82rem;">
+                        Base: {{ resultado.total_eleitores }} eleitores ativos
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Ranking dos candidatos ── #}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Classificação dos Candidatos</span>
+        <span class="badge bg-primary">{{ resultado.candidatos | length }} candidatos</span>
+    </div>
+
+    {% if resultado.candidatos %}
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 align-middle">
+            <thead>
+                <tr>
+                    <th style="width:55px;">Pos.</th>
+                    <th class="d-print-none" style="width:50px;">Foto</th>
+                    <th>Candidato</th>
+                    <th style="width:90px;">Votos</th>
+                    <th style="width:180px;" class="d-print-none">Percentual</th>
+                    <th style="width:55px;" class="d-print-none">%</th>
+                    <th style="width:130px;">Situação</th>
+                    <th style="width:120px;" class="d-print-none">Desempate</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in resultado.candidatos %}
+            {% set cor_linha = 'table-success' if item.situacao == 'Titular' else ('table-info' if item.situacao == 'Suplente' else '') %}
+            <tr class="{{ cor_linha }}">
+                <td class="text-center">
+                    {% if item.posicao == 1 and item.votos > 0 %}
+                        <i class="bi bi-trophy-fill text-warning"></i>
+                    {% else %}
+                        <span class="fw-semibold text-muted">{{ item.posicao }}º</span>
+                    {% endif %}
+                </td>
+                <td class="d-print-none">
+                    {% if item.candidato.foto %}
+                    <img src="{{ item.candidato.foto }}" class="rounded-circle"
+                         style="width:40px;height:40px;object-fit:cover;">
+                    {% else %}
+                    <div class="rounded-circle d-flex align-items-center justify-content-center"
+                         style="width:40px;height:40px;background:#e5e7eb;">
+                        <i class="bi bi-person-fill text-secondary"></i>
+                    </div>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="fw-semibold">{{ item.candidato.nome }}</span>
+                    {% if item.data_admissao %}
+                    <div class="text-muted d-print-none" style="font-size:.72rem;">
+                        <i class="bi bi-calendar2-check"></i>
+                        Admitido em {{ item.data_admissao.strftime('%d/%m/%Y') }}
+                    </div>
+                    {% endif %}
+                </td>
+                <td class="text-center fw-bold">{{ item.votos }}</td>
+                <td class="d-print-none">
+                    {% if resultado.total_votos > 0 %}
+                    <div class="progress" style="height:14px;">
+                        <div class="progress-bar {{ 'bg-success' if item.situacao == 'Titular' else 'bg-info' if item.situacao == 'Suplente' else 'bg-secondary' }}"
+                             style="width:{{ item.pct }}%;">
+                            {% if item.pct > 12 %}{{ item.pct }}%{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </td>
+                <td class="d-print-none text-muted" style="font-size:.82rem;">{{ item.pct }}%</td>
+                <td>
+                    {% if item.situacao == 'Titular' %}
+                    <span class="badge bg-success px-3">Titular</span>
+                    {% elif item.situacao == 'Suplente' %}
+                    <span class="badge bg-primary px-3">Suplente</span>
+                    {% else %}
+                    <span class="badge bg-secondary px-3">Não eleito</span>
+                    {% endif %}
+                </td>
+                <td class="d-print-none">
+                    {% if item.desempate_aplicado %}
+                    <span class="badge bg-warning text-dark" style="font-size:.72rem;"
+                          title="Empate resolvido por: data de admissão → nome">
+                        <i class="bi bi-info-circle"></i> Desempate
+                    </span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-people" style="font-size:2.5rem;opacity:.3;"></i>
+        <p class="mt-2 mb-0">Nenhum candidato cadastrado nesta unidade.</p>
+    </div>
+    {% endif %}
+</div>
+
+{# ── Legenda de desempate ── #}
+{% set tem_desempate = resultado.candidatos | selectattr('desempate_aplicado') | list %}
+{% if tem_desempate %}
+<div class="alert alert-warning d-print-none mt-3" style="font-size:.85rem;">
+    <i class="bi bi-info-circle-fill me-2"></i>
+    <strong>Critério de desempate aplicado:</strong>
+    Candidatos com o mesmo número de votos foram ordenados pela
+    <strong>data de admissão mais antiga</strong>. Em caso de empate também na admissão,
+    foi usado <strong>ordem alfabética do nome</strong>.
+</div>
+{% endif %}
+
+<style>
+@media print {
+    body { font-size: 10pt; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    .table-success td { background-color: #d1fae5 !important; -webkit-print-color-adjust: exact; }
+    .table-info td { background-color: #cffafe !important; -webkit-print-color-adjust: exact; }
+}
+</style>
+
+{% endblock %}

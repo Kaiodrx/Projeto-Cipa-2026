@@ -1,0 +1,116 @@
+{% extends 'base_admin.html' %}
+{% block title %}Cartaz dos Eleitos — {{ unidade }} — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <div>
+        <h4 class="fw-bold mb-0">Cartaz dos Eleitos — {{ unidade }}</h4>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a href="{{ url_for('admin.relatorios_unidade', unidade=unidade) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+{# ── Cartaz para impressão ── #}
+<div class="card border-2" style="border-color:#002a80 !important;">
+    <div class="card-body text-center py-5 px-4">
+
+        <div class="mb-2">
+            <img src="{{ url_for('static', filename='logo-neoenergia.png') }}"
+                 style="height:60px;object-fit:contain;" alt="Neoenergia Brasília">
+        </div>
+        <h2 class="fw-bold mt-3" style="color:#002a80;letter-spacing:.04em;">ELEIÇÃO CIPA 2026</h2>
+        <h4 class="text-muted mb-1">{{ unidade }}</h4>
+        {% if resultado.eleicao and resultado.eleicao.data_encerramento %}
+        <p class="text-muted mb-4" style="font-size:.9rem;">
+            Eleição encerrada em {{ resultado.eleicao.data_encerramento.strftime('%d/%m/%Y') }}
+        </p>
+        {% endif %}
+
+        <hr style="border-color:#002a80;border-width:2px;">
+
+        {# Titulares #}
+        {% if titulares %}
+        <div class="mb-4">
+            <h5 class="fw-bold mb-3 text-uppercase" style="color:#00AA44;letter-spacing:.08em;">
+                <i class="bi bi-star-fill me-2"></i>Membros Titulares
+            </h5>
+            <div class="row g-3 justify-content-center">
+                {% for item in titulares %}
+                <div class="col-auto">
+                    <div class="text-center p-3 rounded-3" style="background:#f0fdf4;min-width:160px;">
+                        {% if item.candidato.foto %}
+                        <img src="{{ item.candidato.foto }}" class="rounded-circle mb-2"
+                             style="width:80px;height:80px;object-fit:cover;border:3px solid #00AA44;">
+                        {% else %}
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                             style="width:80px;height:80px;background:#dcfce7;border:3px solid #00AA44;">
+                            <i class="bi bi-person-fill" style="font-size:2rem;color:#00AA44;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="fw-bold" style="font-size:.9rem;">{{ item.candidato.nome }}</div>
+                        <div class="text-muted" style="font-size:.8rem;">{{ item.votos }} voto{{ 's' if item.votos != 1 }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# Suplentes #}
+        {% if suplentes %}
+        <hr>
+        <div class="mb-2">
+            <h5 class="fw-bold mb-3 text-uppercase" style="color:#2563eb;letter-spacing:.08em;">
+                <i class="bi bi-star me-2"></i>Membros Suplentes
+            </h5>
+            <div class="row g-3 justify-content-center">
+                {% for item in suplentes %}
+                <div class="col-auto">
+                    <div class="text-center p-3 rounded-3" style="background:#eff6ff;min-width:160px;">
+                        {% if item.candidato.foto %}
+                        <img src="{{ item.candidato.foto }}" class="rounded-circle mb-2"
+                             style="width:70px;height:70px;object-fit:cover;border:3px solid #2563eb;">
+                        {% else %}
+                        <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-2"
+                             style="width:70px;height:70px;background:#dbeafe;border:3px solid #2563eb;">
+                            <i class="bi bi-person-fill" style="font-size:1.8rem;color:#2563eb;"></i>
+                        </div>
+                        {% endif %}
+                        <div class="fw-bold" style="font-size:.85rem;">{{ item.candidato.nome }}</div>
+                        <div class="text-muted" style="font-size:.78rem;">{{ item.votos }} voto{{ 's' if item.votos != 1 }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if not titulares and not suplentes %}
+        <div class="text-muted py-4">
+            <i class="bi bi-info-circle fs-3"></i>
+            <p class="mt-2">Nenhum eleito definido ainda. Aguarde o encerramento da eleição.</p>
+        </div>
+        {% endif %}
+
+        <hr style="border-color:#002a80;border-width:2px;">
+        <p class="text-muted mb-0" style="font-size:.8rem;">
+            Sistema de Votação CIPA 2026 — Neoenergia Brasília — {{ now }}
+        </p>
+    </div>
+</div>
+
+<style>
+@media print {
+    body { font-size: 10pt; }
+    .card { border: 2px solid #002a80 !important; box-shadow: none !important; }
+    img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+{% endblock %}

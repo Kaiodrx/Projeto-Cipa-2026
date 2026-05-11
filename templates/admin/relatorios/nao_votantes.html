@@ -1,0 +1,70 @@
+{% extends 'base_admin.html' %}
+{% block title %}Eleitores Não Votantes — {{ unidade }} — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <div>
+        <h4 class="fw-bold mb-0">Eleitores Não Votantes — {{ unidade }}</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">{{ total }} registro(s)</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Imprimir</button>
+        <a href="{{ url_for('admin.relatorios_unidade', unidade=unidade) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+</div>
+
+<div class="d-none d-print-block text-center mb-4">
+    <h2 class="fw-bold">LISTA DE ELEITORES NÃO VOTANTES — CIPA 2026</h2>
+    <h4>{{ unidade }}</h4>
+    <p>Emitida em: {{ now }}</p>
+    <hr>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        {% if nao_votantes %}
+        <table class="table table-sm mb-0" style="font-size:.85rem;">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Matrícula</th>
+                    <th>Nome</th>
+                    <th>Setor</th>
+                    <th>Cargo</th>
+                    <th>Admissão</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in nao_votantes %}
+                <tr>
+                    <td class="text-muted">{{ loop.index }}</td>
+                    <td><code style="font-size:.78rem;">{{ f.matricula }}</code></td>
+                    <td>{{ f.nome }}</td>
+                    <td class="text-muted">{{ f.setor or '—' }}</td>
+                    <td class="text-muted">{{ f.cargo or '—' }}</td>
+                    <td class="text-muted">{{ f.data_admissao.strftime('%d/%m/%Y') if f.data_admissao else '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-check2-circle text-success fs-3"></i>
+            <p class="mt-2">Todos os eleitores já votaram!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<p class="text-muted mt-3" style="font-size:.8rem;">
+    Total: {{ total }} não votante(s). Emitida em {{ now }} — Sistema CIPA 2026 — Neoenergia Brasília.
+</p>
+
+<style>
+@media print {
+    body { font-size: 9pt; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+}
+</style>
+{% endblock %}

@@ -38,7 +38,7 @@ O sistema possui duas áreas distintas:
 - Finalizar eleição e salvar resultado no histórico
 - Consultar histórico de eleições anteriores
 
-**Unidades suportadas:** UTD Sobradinho, UTD Planaltina, UTD SIA, Sede Park Shopping, UTD Taguatinga, UTD Lago Sul, UTD São Sebastião.
+**Unidades suportadas:** UTD Sobradinho, UTD Planaltina, UTD SIA, Sede Park Shopping, UTD Taguatinga, UTD Lago Sul, UTD São Sebastião, UTD Gama.
 
 ---
 

@@ -1,0 +1,115 @@
+{% extends 'base_admin.html' %}
+{% block title %}Zérésima — {{ unidade }} — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <div>
+        <h4 class="fw-bold mb-0">Zérésima — {{ unidade }}</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Emitida em: {{ now }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a href="{{ url_for('admin.relatorios_unidade', unidade=unidade) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+{# Print header #}
+<div class="d-none d-print-block text-center mb-4">
+    <h2 class="fw-bold">ZÉRÉSIMA — ELEIÇÃO CIPA 2026</h2>
+    <h4>{{ unidade }}</h4>
+    <p>Emitida em: {{ now }}</p>
+    <hr>
+</div>
+
+{% if eleicao.status == 'aberta' %}
+<div class="alert alert-warning d-print-none">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <strong>Atenção:</strong> A eleição desta unidade já está aberta. A zérésima é um documento pré-eleição.
+</div>
+{% endif %}
+
+<div class="card mb-4">
+    <div class="card-header fw-semibold">Informações da Urna</div>
+    <div class="card-body">
+        <table class="table table-sm mb-0">
+            <tr>
+                <td class="text-muted" style="width:220px;">Unidade</td>
+                <td><strong>{{ unidade }}</strong></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Data/Hora de Emissão</td>
+                <td>{{ now }}</td>
+            </tr>
+            <tr>
+                <td class="text-muted">Status da Eleição</td>
+                <td>
+                    <span class="badge {{ 'bg-success' if eleicao.status == 'aberta' else 'bg-danger' }}">
+                        {{ eleicao.status | upper }}
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="text-muted">Total de Eleitores Ativos</td>
+                <td>{{ total_eleitores }}</td>
+            </tr>
+            <tr>
+                <td class="text-muted">Total de Candidatos</td>
+                <td>{{ total_candidatos }}</td>
+            </tr>
+            <tr>
+                <td class="text-muted">Dimensionamento (GR3)</td>
+                <td>
+                    {{ dimensionamento.titulares }} Titular(es) e {{ dimensionamento.suplentes }} Suplente(s)
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header fw-semibold">Candidatos — todos com ZERO voto</div>
+    <div class="card-body p-0">
+        {% if candidatos %}
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Candidato</th>
+                    <th class="text-center">Votos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in candidatos %}
+                <tr>
+                    <td class="text-muted">{{ loop.index }}</td>
+                    <td>{{ c.nome }}</td>
+                    <td class="text-center fw-bold">0</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-center py-4 text-muted">Nenhum candidato cadastrado.</div>
+        {% endif %}
+    </div>
+</div>
+
+<p class="text-muted mt-3" style="font-size:.8rem;">
+    Esta zérésima confirma que, no momento da emissão ({{ now }}),
+    nenhum voto havia sido registrado para nenhum candidato desta unidade.
+    Sistema de Votação CIPA 2026 — Neoenergia Brasília.
+</p>
+
+<style>
+@media print {
+    body { font-size: 10pt; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+}
+</style>
+
+{% endblock %}

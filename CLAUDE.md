@@ -2,6 +2,9 @@
 
 Este arquivo fornece orientações ao Claude Code (claude.ai/code) ao trabalhar com o código deste repositório.
 
+## Orientações
+Sempre me explique tudo o que está fazendo como se eu tivesse 15 anos de idade. Sou um profissional não técnico e quero aprender sobre tudo o que estamos fazendo.
+
 ## Comandos
 
 ```bash

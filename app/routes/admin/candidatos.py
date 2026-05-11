@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from . import admin_bp
 from ...extensions import db
-from ...models import Candidato, HistoricoEleicao
+from ...models import Candidato, Funcionario, HistoricoEleicao
 from ...constants import UNIDADES
 from ...services.foto import allowed_file, salvar_foto, deletar_foto, migrar_base64
 from ...utils import login_required
@@ -23,6 +23,13 @@ def candidatos():
     pagination = query.order_by(Candidato.unidade, Candidato.nome).paginate(
         page=page, per_page=20, error_out=False
     )
+
+    # Funcionários disponíveis por unidade para vinculação no formulário
+    funcionarios_por_unidade = {
+        u: Funcionario.query.filter_by(unidade=u, ativo=True).order_by(Funcionario.nome).all()
+        for u in UNIDADES
+    }
+
     return render_template(
         'admin/candidatos.html',
         candidatos=pagination.items,
@@ -31,6 +38,7 @@ def candidatos():
         search=search,
         unidade_filtro=unidade_filtro,
         total_geral=Candidato.query.count(),
+        funcionarios_por_unidade=funcionarios_por_unidade,
     )
 
 
@@ -39,8 +47,11 @@ def candidatos():
 def adicionar_candidato():
     nome = request.form['nome'].strip()
     unidade = request.form['unidade'].strip()
+    funcionario_id = request.form.get('funcionario_id') or None
+    if funcionario_id:
+        funcionario_id = int(funcionario_id)
     if nome and unidade:
-        candidato = Candidato(nome=nome, cargo='', unidade=unidade)
+        candidato = Candidato(nome=nome, cargo='', unidade=unidade, funcionario_id=funcionario_id)
         db.session.add(candidato)
         db.session.flush()
         file = request.files.get('foto')
@@ -48,6 +59,19 @@ def adicionar_candidato():
             candidato.foto = salvar_foto(file)
         db.session.commit()
         flash(f'Candidato adicionado em {unidade}!', 'success')
+    return redirect(url_for('admin.candidatos'))
+
+
+@admin_bp.route('/candidatos/editar/<int:id>', methods=['POST'])
+@login_required
+def editar_candidato(id):
+    candidato = Candidato.query.get_or_404(id)
+    candidato.nome = request.form.get('nome', '').strip() or candidato.nome
+    candidato.unidade = request.form.get('unidade', '').strip() or candidato.unidade
+    funcionario_id = request.form.get('funcionario_id') or None
+    candidato.funcionario_id = int(funcionario_id) if funcionario_id else None
+    db.session.commit()
+    flash('Candidato atualizado!', 'success')
     return redirect(url_for('admin.candidatos'))
 
 

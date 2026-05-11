@@ -1,0 +1,70 @@
+{% extends 'base_admin.html' %}
+{% block title %}Lista dos Eleitos — {{ unidade }} — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <h4 class="fw-bold mb-0">Lista dos Eleitos — {{ unidade }}</h4>
+    <div class="d-flex gap-2">
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer"></i> Imprimir</button>
+        <a href="{{ url_for('admin.relatorios_unidade', unidade=unidade) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+</div>
+
+<div class="d-none d-print-block text-center mb-4">
+    <h2 class="fw-bold">LISTA DOS ELEITOS — CIPA 2026</h2>
+    <h4>{{ unidade }}</h4>
+    <p>Emitida em: {{ now }}</p>
+    <hr>
+</div>
+
+{% if eleitos %}
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Pos.</th>
+                    <th>Candidato</th>
+                    <th class="text-center">Votos</th>
+                    <th class="text-center">%</th>
+                    <th>Situação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in eleitos %}
+                <tr class="{{ 'table-success' if item.situacao == 'Titular' else 'table-info' }}">
+                    <td>{{ item.posicao }}º</td>
+                    <td><strong>{{ item.candidato.nome }}</strong></td>
+                    <td class="text-center fw-bold">{{ item.votos }}</td>
+                    <td class="text-center">{{ item.pct }}%</td>
+                    <td>
+                        <span class="badge {{ 'bg-success' if item.situacao == 'Titular' else 'bg-primary' }}">
+                            {{ item.situacao }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info">
+    Nenhum eleito definido. Aguarde o encerramento da eleição ou verifique se há candidatos cadastrados.
+</div>
+{% endif %}
+
+<p class="text-muted mt-3" style="font-size:.8rem;">
+    Emitida em {{ now }} — Sistema CIPA 2026 — Neoenergia Brasília.
+</p>
+
+<style>
+@media print {
+    body { font-size: 10pt; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    .table-success td { background-color: #d1fae5 !important; -webkit-print-color-adjust: exact; }
+    .table-info td { background-color: #cffafe !important; -webkit-print-color-adjust: exact; }
+}
+</style>
+{% endblock %}

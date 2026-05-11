@@ -39,13 +39,31 @@ def _init_db():
     from .constants import UNIDADES
 
     db.create_all()
+
+    # Migração incremental: adiciona colunas novas sem destruir dados existentes.
+    # Cada ALTER TABLE está em try/except pois falha silenciosamente se a coluna já existe.
+    _alter_stmts = [
+        # Candidato
+        "ALTER TABLE candidato ADD COLUMN foto TEXT",
+        "ALTER TABLE candidato ADD COLUMN unidade VARCHAR(50)",
+        "ALTER TABLE candidato ADD COLUMN funcionario_id INTEGER REFERENCES funcionario(id)",
+        # Funcionario
+        "ALTER TABLE funcionario ADD COLUMN unidade VARCHAR(50)",
+        "ALTER TABLE funcionario ADD COLUMN ativo BOOLEAN DEFAULT 1",
+        "ALTER TABLE funcionario ADD COLUMN data_admissao DATE",
+        "ALTER TABLE funcionario ADD COLUMN data_nascimento DATE",
+        "ALTER TABLE funcionario ADD COLUMN setor VARCHAR(100)",
+        "ALTER TABLE funcionario ADD COLUMN cargo VARCHAR(100)",
+        # Voto
+        "ALTER TABLE voto ADD COLUMN funcionario_id INTEGER REFERENCES funcionario(id)",
+        "ALTER TABLE voto ADD COLUMN data_hora DATETIME",
+        # Eleicao
+        "ALTER TABLE eleicao ADD COLUMN unidade VARCHAR(50)",
+        "ALTER TABLE eleicao ADD COLUMN data_abertura DATETIME",
+        "ALTER TABLE eleicao ADD COLUMN data_encerramento DATETIME",
+    ]
     with db.engine.connect() as conn:
-        for sql in [
-            "ALTER TABLE candidato ADD COLUMN foto TEXT",
-            "ALTER TABLE candidato ADD COLUMN unidade VARCHAR(50)",
-            "ALTER TABLE funcionario ADD COLUMN unidade VARCHAR(50)",
-            "ALTER TABLE eleicao ADD COLUMN unidade VARCHAR(50)",
-        ]:
+        for sql in _alter_stmts:
             try:
                 conn.execute(db.text(sql))
                 conn.commit()

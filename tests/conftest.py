@@ -9,6 +9,7 @@ Estratégia de isolamento:
 """
 import os
 import tempfile
+from datetime import date
 
 import pytest
 from sqlalchemy.pool import StaticPool
@@ -25,7 +26,6 @@ from config import Config
 
 class TestingConfig(Config):
     TESTING = True
-    # Banco em memória compartilhado via StaticPool: mesma conexão para fixture e requests.
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     SQLALCHEMY_ENGINE_OPTIONS = {
         'connect_args': {'check_same_thread': False},
@@ -114,6 +114,11 @@ def funcionario(db):
         nome='Maria Santos',
         unidade=UNIDADE,
         votou=False,
+        ativo=True,
+        data_admissao=date(2018, 3, 15),
+        data_nascimento=date(1985, 7, 20),
+        setor='Operações',
+        cargo='Eletricista',
     )
     _db.session.add(f)
     _db.session.commit()

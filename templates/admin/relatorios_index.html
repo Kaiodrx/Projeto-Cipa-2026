@@ -1,0 +1,254 @@
+{% extends 'base_admin.html' %}
+{% block title %}Relatórios — {{ unidade }} — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h4 class="fw-bold mb-0">Relatórios — {{ unidade }}</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Selecione o relatório desejado</p>
+    </div>
+    <a href="{{ url_for('admin.gerenciar_eleicao') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Voltar
+    </a>
+</div>
+
+{# ── Status da unidade ── #}
+<div class="card mb-4">
+    <div class="card-body d-flex align-items-center gap-3 flex-wrap">
+        <i class="bi bi-geo-alt-fill fs-4" style="color:#002a80;"></i>
+        <div>
+            <div class="fw-semibold">{{ unidade }}</div>
+            <div class="d-flex gap-3 mt-1" style="font-size:.82rem;color:#6b7280;">
+                <span><i class="bi bi-people"></i> {{ total_eleitores }} eleitores ativos</span>
+                <span><i class="bi bi-person-fill"></i> {{ total_candidatos }} candidatos</span>
+                <span><i class="bi bi-diagram-3"></i> {{ dimensionamento.titulares }}T / {{ dimensionamento.suplentes }}S</span>
+                <span class="badge {{ 'bg-success' if eleicao.status == 'aberta' else 'bg-danger' }}">
+                    {{ eleicao.status | upper }}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Grid de relatórios ── #}
+<div class="row g-3">
+
+    {# Zérésima #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#eff6ff;">
+                        <i class="bi bi-clipboard-check fs-4 text-primary"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Zérésima</h6>
+                        <small class="text-muted">Antes da abertura</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Todos os candidatos com zero voto, eleitores e status inicial da urna.
+                </p>
+                <a href="{{ url_for('admin.zeresima', unidade=unidade) }}"
+                   class="btn btn-outline-primary w-100" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Emitir Zérésima
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Boletim da Urna #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#f0fdf4;">
+                        <i class="bi bi-receipt fs-4 text-success"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Boletim da Urna</h6>
+                        <small class="text-muted">Resultado consolidado</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Totais de eleitores, votantes, não-votantes, votos e participação.
+                </p>
+                <a href="{{ url_for('admin.boletim_urna', unidade=unidade) }}"
+                   class="btn btn-outline-success w-100" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Ver Boletim
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Cartaz dos Eleitos #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#fff7ed;">
+                        <i class="bi bi-trophy fs-4 text-warning"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Cartaz dos Eleitos</h6>
+                        <small class="text-muted">Para afixar</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Layout para impressão com titulares e suplentes eleitos.
+                </p>
+                <a href="{{ url_for('admin.cartaz_eleitos', unidade=unidade) }}"
+                   class="btn btn-outline-warning w-100" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Ver Cartaz
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Lista dos Eleitos #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#faf5ff;">
+                        <i class="bi bi-person-check fs-4 text-purple" style="color:#7c3aed;"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Lista dos Eleitos</h6>
+                        <small class="text-muted">Titulares e Suplentes</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Candidatos eleitos com votos, percentual e situação final.
+                </p>
+                <a href="{{ url_for('admin.lista_eleitos', unidade=unidade) }}"
+                   class="btn btn-outline-secondary w-100" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Ver Lista
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Classificação Completa #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#f0f9ff;">
+                        <i class="bi bi-bar-chart-line fs-4 text-info"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Classificação dos Candidatos</h6>
+                        <small class="text-muted">Ranking completo</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Todos os candidatos ordenados por votos com situação final.
+                </p>
+                <a href="{{ url_for('admin.classificacao_candidatos', unidade=unidade) }}"
+                   class="btn btn-outline-info w-100" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Ver Classificação
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Lista de Votantes #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#f0fdf4;">
+                        <i class="bi bi-list-check fs-4 text-success"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Eleitores Votantes</h6>
+                        <small class="text-muted">Quem já votou</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Lista completa dos eleitores que já exerceram seu voto.
+                </p>
+                <a href="{{ url_for('admin.lista_votantes', unidade=unidade) }}"
+                   class="btn btn-outline-success w-100" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Ver Lista
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Lista de Não Votantes #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#fef2f2;">
+                        <i class="bi bi-person-x fs-4 text-danger"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Eleitores Não Votantes</h6>
+                        <small class="text-muted">Pendentes</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Lista dos eleitores ativos que ainda não votaram.
+                </p>
+                <a href="{{ url_for('admin.lista_nao_votantes', unidade=unidade) }}"
+                   class="btn btn-outline-danger w-100" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Ver Lista
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Lista de Eleitores Ativos #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#e8eeff;">
+                        <i class="bi bi-people-fill fs-4" style="color:#002a80;"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Lista de Eleitores Ativos</h6>
+                        <small class="text-muted">Cadastro completo</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Todos os eleitores ativos com dados cadastrais completos.
+                </p>
+                <a href="{{ url_for('admin.lista_eleitores', unidade=unidade) }}"
+                   class="btn btn-outline-secondary w-100" target="_blank">
+                    <i class="bi bi-box-arrow-up-right"></i> Ver Lista
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Apuração #}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="rounded-3 p-2" style="background:#ecfdf5;">
+                        <i class="bi bi-graph-up fs-4 text-success"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-0">Tela de Apuração</h6>
+                        <small class="text-muted">Resultado detalhado</small>
+                    </div>
+                </div>
+                <p class="text-muted mb-3" style="font-size:.82rem;">
+                    Apuração completa com ranking, eleitos e percentuais.
+                </p>
+                <a href="{{ url_for('admin.apuracao_unidade', unidade=unidade) }}"
+                   class="btn btn-outline-success w-100">
+                    <i class="bi bi-bar-chart"></i> Ir para Apuração
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

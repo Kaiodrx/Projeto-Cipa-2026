@@ -5,3 +5,4 @@ instance/
 .env
 static/fotos/
 !static/logo-neoenergia.png
+CLAUDE.md

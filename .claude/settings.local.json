@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "Bash(Sort-Object FullName)",
+      "Bash(python -m pytest tests/test_dimensionamento.py tests/test_apuracao.py tests/test_relatorios.py tests/test_eleicao.py tests/test_funcionarios.py -v --tb=short)"
+    ]
+  }
+}

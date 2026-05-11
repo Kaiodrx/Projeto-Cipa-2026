@@ -1,44 +1,115 @@
 # Sistema de Eleição CIPA 2026
 
-Aplicação web desenvolvida em Flask para gerenciar o processo eleitoral da CIPA (Comissão Interna de Prevenção de Acidentes) da Neoenergia Brasília. Suporta múltiplas unidades com controle de candidatos, funcionários e votação em tempo real.
+Aplicação web desenvolvida em Flask para gerenciar o processo eleitoral da CIPA (Comissão Interna de Prevenção de Acidentes) da Neoenergia Brasília. Suporta múltiplas unidades com dimensionamento automático, apuração, desempate e relatórios obrigatórios.
 
 ---
 
 ## Índice
 
 1. [O que o sistema faz](#o-que-o-sistema-faz)
-2. [Requisitos](#requisitos)
-3. [Instalação e execução local](#instalação-e-execução-local)
-4. [Variáveis de ambiente](#variáveis-de-ambiente)
-5. [Banco de dados](#banco-de-dados)
-6. [Estrutura de pastas](#estrutura-de-pastas)
-7. [Módulos principais](#módulos-principais)
-8. [Testes automatizados](#testes-automatizados)
-9. [Deploy (Railway)](#deploy-railway)
-10. [Melhorias futuras](#melhorias-futuras)
+2. [Dimensionamento da CIPA](#dimensionamento-da-cipa)
+3. [Regras de apuração e desempate](#regras-de-apuração-e-desempate)
+4. [Relatórios disponíveis](#relatórios-disponíveis)
+5. [Requisitos](#requisitos)
+6. [Instalação e execução local](#instalação-e-execução-local)
+7. [Variáveis de ambiente](#variáveis-de-ambiente)
+8. [Banco de dados](#banco-de-dados)
+9. [Estrutura de pastas](#estrutura-de-pastas)
+10. [Módulos principais](#módulos-principais)
+11. [Testes automatizados](#testes-automatizados)
+12. [Deploy (Railway)](#deploy-railway)
 
 ---
 
 ## O que o sistema faz
 
-O sistema possui duas áreas distintas:
+O sistema possui duas áreas:
 
-**Área pública** — acessível por qualquer funcionário:
+**Área pública** — acessível por qualquer funcionário ativo:
 - Página inicial com informações da eleição
 - Login por matrícula e unidade para votar
 - Tela de votação com lista de candidatos e fotos
 - Confirmação de voto registrado
 
 **Painel administrativo** (`/admin`) — restrito ao administrador:
-- Gerenciar candidatos (cadastrar, editar, remover, upload de foto)
-- Gerenciar funcionários (cadastrar, remover, pesquisar, filtrar, paginar)
-- Abrir e fechar eleições por unidade ou todas ao mesmo tempo
+- Gerenciar candidatos (cadastrar, remover, upload de foto, vincular a funcionário)
+- Gerenciar funcionários com campos completos: matrícula, nome, unidade, setor, cargo, data de admissão, data de nascimento, status ativo/inativo
+- **Administração da Eleição por unidade**: visualizar dimensionamento automático, eleitores, candidatos, votos, abrir/fechar eleição, acessar apuração e relatórios
+- **Apuração detalhada por unidade**: ranking completo com titulares, suplentes e critério de desempate visível
 - Acompanhar participação em tempo real
-- Visualizar resultado parcial ou final com ranking de votos
-- Finalizar eleição e salvar resultado no histórico
+- Visualizar resultado geral e finalizar eleição (salvar no histórico)
+- Emitir 8 tipos de relatórios por unidade (ver seção abaixo)
 - Consultar histórico de eleições anteriores
 
 **Unidades suportadas:** UTD Sobradinho, UTD Planaltina, UTD SIA, Sede Park Shopping, UTD Taguatinga, UTD Lago Sul, UTD São Sebastião, UTD Gama.
+
+---
+
+## Dimensionamento da CIPA
+
+O sistema calcula automaticamente a quantidade de **Titulares** e **Suplentes** da CIPA por unidade, com base no número de eleitores ativos e no **Grau de Risco 3** (NR-5, Tabela I).
+
+Serviço: `app/services/dimensionamento.py` — função `calcular_dimensionamento(num_funcionarios)`.
+
+### Tabela de dimensionamento (Grau de Risco 3)
+
+| Funcionários | Titulares | Suplentes |
+|---|---|---|
+| 0 a 19 | 0 | 0 |
+| 20 a 29 | 1 | 1 |
+| 30 a 50 | 1 | 1 |
+| 51 a 80 | 2 | 1 |
+| 81 a 100 | 2 | 1 |
+| 101 a 120 | 2 | 1 |
+| 121 a 140 | 3 | 2 |
+| 141 a 300 | 4 | 2 |
+| 301 a 500 | 5 | 4 |
+| 501 a 1.000 | 6 | 4 |
+| 1.001 a 2.500 | 8 | 6 |
+| 2.501 a 5.000 | 10 | 8 |
+| 5.001 a 10.000 | 12 | 8 |
+| Acima de 10.000 | +2 por grupo de 2.500 | +2 por grupo de 2.500 |
+
+**Regra acima de 10.000:** Para cada grupo adicional de 2.500 funcionários acima de 10.000, acrescenta-se 2 titulares e 2 suplentes. Grupos parciais contam como completos (arredondamento para cima — `math.ceil`).
+
+Exemplos:
+- 10.001 a 12.500 → 1 grupo adicional → **14 titulares, 10 suplentes**
+- 12.501 a 15.000 → 2 grupos → **16 titulares, 12 suplentes**
+
+---
+
+## Regras de apuração e desempate
+
+Serviço: `app/services/apuracao.py` — função `apurar_eleicao(unidade)`.
+
+### Ordenação dos candidatos
+
+1. **Número de votos** (decrescente) — critério principal
+2. **Data de admissão mais antiga** (crescente) — 1º critério de desempate: funcionário mais antigo tem prioridade
+3. **Nome em ordem alfabética** (crescente) — 2º critério de desempate: determinístico e auditável
+
+O critério de desempate é aplicado automaticamente e sinalizado na tela de apuração com o badge **"Desempate"** ao lado dos candidatos afetados.
+
+### Vínculo candidato → funcionário
+
+Para usar a data de admissão no desempate, o candidato precisa estar vinculado ao funcionário correspondente pelo campo `funcionario_id` na tela de candidatos. Candidatos sem vínculo são tratados como sem data de admissão e ficam no final do grupo empatado (resolvido pelo nome).
+
+---
+
+## Relatórios disponíveis
+
+Acessíveis em `/admin/eleicao/<unidade>/relatorios`. Todos são páginas HTML com suporte a impressão (`@media print`).
+
+| Relatório | URL | Descrição |
+|---|---|---|
+| Zérésima | `.../relatorio/zeresima` | Todos os candidatos com 0 votos antes da eleição |
+| Boletim da Urna | `.../relatorio/boletim` | Totais, participação e ranking completo |
+| Cartaz dos Eleitos | `.../relatorio/cartaz` | Layout visual para afixar com fotos dos eleitos |
+| Lista dos Eleitos | `.../relatorio/eleitos` | Titulares e suplentes com votos e percentual |
+| Classificação dos Candidatos | `.../relatorio/classificacao` | Ranking completo com situação final |
+| Eleitores Votantes | `.../relatorio/votantes` | Quem votou com data/hora do voto |
+| Eleitores Não Votantes | `.../relatorio/nao-votantes` | Eleitores ativos que ainda não votaram |
+| Lista de Eleitores Ativos | `.../relatorio/eleitores` | Cadastro completo com todos os campos |
 
 ---
 
@@ -88,11 +159,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 4. Configurar variáveis de ambiente (opcional para desenvolvimento)
-
-Crie um arquivo `.env` na raiz ou exporte manualmente (ver seção [Variáveis de ambiente](#variáveis-de-ambiente)). Para rodar localmente sem configuração extra, os valores padrão já funcionam.
-
-### 5. Rodar a aplicação
+### 4. Rodar a aplicação
 
 ```bash
 python run.py
@@ -113,9 +180,7 @@ A aplicação estará disponível em `http://localhost:5000`.
 | Variável | Padrão (desenvolvimento) | Descrição |
 |---|---|---|
 | `SECRET_KEY` | `cipa2026_chave_secreta` | Chave de criptografia das sessões Flask. **Deve ser trocada em produção.** |
-| `DATABASE_URL` | `sqlite:///cipa.db` | URI do banco de dados. Em produção, usar PostgreSQL (ex: `postgresql://user:pass@host/db`). |
-
-> Em produção, nunca use os valores padrão. Configure essas variáveis diretamente no painel do provedor de hospedagem.
+| `DATABASE_URL` | `sqlite:///cipa.db` | URI do banco de dados. Em produção, usar PostgreSQL. |
 
 ---
 
@@ -123,29 +188,29 @@ A aplicação estará disponível em `http://localhost:5000`.
 
 ### Tecnologia
 
-Em desenvolvimento: **SQLite** (arquivo `instance/cipa.db`, criado automaticamente).  
+Em desenvolvimento: **SQLite** (arquivo `instance/cipa.db`, criado automaticamente).
 Em produção: recomenda-se **PostgreSQL** via variável `DATABASE_URL`.
 
 ### Modelos (tabelas)
 
-| Modelo | Tabela | Descrição |
-|---|---|---|
-| `Admin` | `admin` | Usuário administrador com senha em hash |
-| `Candidato` | `candidato` | Candidatos por unidade com foto (caminho do arquivo) |
-| `Funcionario` | `funcionario` | Funcionários habilitados a votar, com flag `votou` |
-| `Voto` | `voto` | Cada voto registrado, vinculado a um candidato |
-| `Eleicao` | `eleicao` | Status da eleição por unidade (`aberta` / `fechada`) |
-| `HistoricoEleicao` | `historico_eleicao` | Snapshot JSON de resultados finalizados |
+| Modelo | Descrição |
+|---|---|
+| `Admin` | Usuário administrador com senha em hash |
+| `Funcionario` | Eleitores: matrícula, nome, unidade, votou, ativo, data_admissao, data_nascimento, setor, cargo |
+| `Candidato` | Candidatos por unidade: nome, cargo, foto, funcionario_id (FK opcional para desempate) |
+| `Voto` | Registro de voto: candidato_id, funcionario_id (opcional), data_hora |
+| `Eleicao` | Status da eleição por unidade: status, data_abertura, data_encerramento |
+| `HistoricoEleicao` | Snapshot JSON de resultados finalizados com dimensionamento incluído |
 
-### Inicialização
+### Migração incremental
 
-O banco é criado automaticamente ao iniciar a aplicação (`create_app` chama `_init_db()`). Não há sistema de migrations — qualquer alteração de schema exige recriar o banco manualmente em desenvolvimento, ou gerenciar via SQL em produção.
+O sistema usa `ALTER TABLE ... ADD COLUMN` com `try/except` para adicionar colunas novas sem destruir dados existentes em produção. Isso acontece automaticamente em cada reinício da aplicação (`_init_db()`).
 
 ### Fotos de candidatos
 
-Fotos são salvas em `static/uploads/` com nome UUID (`<uuid>.jpg`). O banco armazena apenas o caminho relativo (`/static/uploads/<uuid>.jpg`). O limite de upload é **5 MB** por arquivo. Formatos aceitos: `jpg`, `jpeg`, `png`, `gif`.
+Fotos são salvas em `static/uploads/` com nome UUID. O banco armazena apenas o caminho relativo. Limite: **16 MB** por arquivo. Formatos: `jpg`, `jpeg`, `png`, `gif`.
 
-> **Atenção (produção):** plataformas como Railway têm sistema de arquivos efêmero — os uploads são perdidos a cada redeploy. Para persistência, integrar com um serviço de armazenamento externo (ex: AWS S3, Cloudflare R2).
+> **Atenção (produção):** plataformas como Railway têm filesystem efêmero — uploads são perdidos a cada redeploy. Para persistência, integrar `app/services/foto.py` com AWS S3 ou equivalente.
 
 ---
 
@@ -153,106 +218,84 @@ Fotos são salvas em `static/uploads/` com nome UUID (`<uuid>.jpg`). O banco arm
 
 ```
 Projeto-Cipa-2026/
-│
-├── run.py                  # Ponto de entrada da aplicação
-├── config.py               # Classes de configuração (Dev / Prod)
-├── requirements.txt        # Dependências Python
-├── pytest.ini              # Configuração do pytest
-├── Procfile                # Comando de start para Heroku-compatíveis
-├── railway.toml            # Configuração de deploy no Railway
-│
-├── app/                    # Pacote principal da aplicação
-│   ├── __init__.py         # Application factory (create_app)
-│   ├── extensions.py       # Instância do SQLAlchemy (db)
-│   ├── models.py           # Modelos ORM (tabelas do banco)
-│   ├── constants.py        # Listas fixas: UNIDADES, ALLOWED_EXTENSIONS
-│   ├── utils.py            # Decorador login_required
-│   │
+├── run.py
+├── config.py
+├── requirements.txt
+├── app/
+│   ├── __init__.py             # Application factory + _init_db()
+│   ├── models.py               # Admin, Funcionario, Candidato, Voto, Eleicao, HistoricoEleicao
+│   ├── constants.py            # UNIDADES, ALLOWED_EXTENSIONS
+│   ├── utils.py                # @login_required
 │   ├── routes/
-│   │   ├── admin/          # Blueprint 'admin' — prefixo /admin
-│   │   │   ├── auth.py         # Login e logout
+│   │   ├── admin/
+│   │   │   ├── auth.py         # Login/logout
 │   │   │   ├── dashboard.py    # Painel principal
-│   │   │   ├── candidatos.py   # CRUD de candidatos
-│   │   │   ├── funcionarios.py # CRUD de funcionários + filtros + paginação
-│   │   │   ├── eleicao.py      # Abrir / fechar eleições
-│   │   │   ├── participacao.py # Acompanhamento em tempo real
-│   │   │   ├── resultado.py    # Resultado e finalização
+│   │   │   ├── candidatos.py   # CRUD candidatos + vincular funcionário
+│   │   │   ├── funcionarios.py # CRUD + novos campos + edição + importação Excel
+│   │   │   ├── eleicao.py      # Adm. Eleição: abrir/fechar + dimensionamento
+│   │   │   ├── apuracao.py     # Apuração detalhada por unidade
+│   │   │   ├── relatorios.py   # 8 relatórios por unidade
+│   │   │   ├── participacao.py # Participação em tempo real
+│   │   │   ├── resultado.py    # Resultado geral + finalizar eleição
 │   │   │   └── historico.py    # Histórico de eleições passadas
-│   │   │
-│   │   └── public/         # Blueprint 'public' — sem prefixo
-│   │       └── votacao.py      # Fluxo público: home, login, votar, confirmação
-│   │
+│   │   └── public/
+│   │       └── votacao.py      # Home, login, votar, confirmação
 │   └── services/
-│       └── foto.py         # Salvar, deletar e migrar fotos de candidatos
+│       ├── foto.py             # Salvar, deletar, migrar fotos
+│       ├── dimensionamento.py  # calcular_dimensionamento(n) — regra NR-5 GR3
+│       └── apuracao.py         # apurar_eleicao(unidade) — ranking + desempate
 │
-├── templates/              # Templates Jinja2
-│   ├── base.html               # Layout base público
-│   ├── base_admin.html         # Layout base administrativo (sidebar + navbar)
-│   ├── home.html               # Página inicial pública
-│   ├── login_admin.html        # Tela de login do admin
+├── templates/
 │   ├── admin/
-│   │   ├── _macros.html        # Macro de paginação reutilizável
-│   │   ├── dashboard.html
-│   │   ├── candidatos.html
-│   │   ├── funcionarios.html
-│   │   ├── eleicao.html
-│   │   ├── participacao.html
-│   │   ├── resultado.html
-│   │   ├── historico.html
-│   │   └── historico_detalhe.html
-│   └── votacao/
-│       ├── login.html          # Login do funcionário para votar
-│       ├── votar.html          # Tela de escolha do candidato
-│       └── confirmacao.html    # Confirmação de voto registrado
+│   │   ├── eleicao.html            # Administração da Eleição (novo)
+│   │   ├── apuracao.html           # Apuração por unidade (novo)
+│   │   ├── relatorios_index.html   # Índice de relatórios por unidade (novo)
+│   │   ├── funcionarios.html       # Com novos campos e modal de edição
+│   │   ├── relatorios/             # 8 relatórios HTML print-friendly (novo)
+│   │   │   ├── zeresima.html
+│   │   │   ├── boletim.html
+│   │   │   ├── cartaz.html
+│   │   │   ├── eleitos.html
+│   │   │   ├── classificacao.html
+│   │   │   ├── votantes.html
+│   │   │   ├── nao_votantes.html
+│   │   │   └── eleitores.html
+│   │   └── ... (demais templates existentes)
+│   └── votacao/ ...
 │
-├── static/
-│   ├── style.css               # Estilos globais
-│   ├── logo-neoenergia.png
-│   ├── fotos/                  # Imagens estáticas da aplicação
-│   └── uploads/                # Fotos de candidatos (geradas em runtime)
-│
-├── tests/
-│   ├── conftest.py             # Fixtures compartilhadas (app, db, client, domínio)
-│   ├── test_auth.py            # Testes de autenticação do admin
-│   ├── test_eleicao.py         # Testes de abertura/fechamento de eleições
-│   ├── test_funcionarios.py         # Testes de CRUD de funcionários
-│   ├── test_upload_funcionarios.py  # Testes de importação via planilha Excel
-│   └── test_votacao.py              # Testes do fluxo de votação e resultado
-│
-└── instance/
-    └── cipa.db                 # Banco SQLite (gerado automaticamente, não versionar)
+└── tests/
+    ├── conftest.py
+    ├── test_dimensionamento.py  # 34 testes das faixas NR-5 + acima de 10.000
+    ├── test_apuracao.py         # 15 testes: ranking, desempate, situação, rotas
+    ├── test_relatorios.py       # 15 testes: todos os 8 relatórios + proteção
+    ├── test_eleicao.py          # Atualizado: novas rotas GET + data_abertura
+    ├── test_funcionarios.py     # Atualizado: novos campos + edição + filtros
+    └── ... (demais testes existentes)
 ```
 
 ---
 
 ## Módulos principais
 
-### `app/__init__.py` — Application Factory
+### `app/services/dimensionamento.py`
 
-Função `create_app(config_class)` que instancia o Flask, registra os Blueprints e inicializa o banco. Aceita uma classe de configuração como argumento, o que permite injetar configurações diferentes em testes (ex: banco em memória).
+Função `calcular_dimensionamento(num_funcionarios: int) -> dict` que retorna `{'titulares': int, 'suplentes': int}`. Encapsula a Tabela I da NR-5 para Grau de Risco 3. Independente de banco de dados — pode ser chamada de qualquer contexto.
 
-### `app/models.py` — Modelos do banco
+### `app/services/apuracao.py`
 
-Define todas as tabelas via SQLAlchemy ORM. O relacionamento `Candidato → Voto` usa `cascade='all, delete-orphan'`, garantindo que os votos de um candidato sejam removidos automaticamente se o candidato for deletado.
+Função `apurar_eleicao(unidade: str) -> dict` que calcula o resultado completo da eleição para uma unidade:
+- Ordena candidatos por votos (desc) → data_admissao (asc) → nome (asc)
+- Calcula `situacao` de cada candidato: Titular / Suplente / Não eleito
+- Marca candidatos com `desempate_aplicado=True` quando há empate em votos
+- Calcula totais de participação e percentuais
 
-### `app/routes/admin/` — Blueprint administrativo
+### `app/routes/admin/eleicao.py`
 
-Cada arquivo corresponde a uma área funcional. Todas as rotas são protegidas pelo decorador `@login_required` (exceto `auth.py`). A paginação em `funcionarios.py` e `candidatos.py` usa o método `.paginate()` do SQLAlchemy, com filtros passados via query string (GET params), tornando as URLs filtradas compartilháveis.
+Rotas de administração da eleição. As ações individuais usam `GET /admin/eleicao/<unidade>/abrir|fechar` (path param com nome da unidade, espaços são URL-encoded automaticamente pelo Flask).
 
-### `app/routes/public/votacao.py` — Fluxo de votação
+### `app/routes/admin/relatorios.py`
 
-Controle de estado via `session['funcionario_id']`. O sistema valida matrícula, unidade, status da eleição e flag `votou` antes de permitir o acesso à tela de voto. Após o voto, a sessão é limpa e o funcionário não consegue votar novamente.
-
-### `app/services/foto.py` — Gerenciamento de fotos
-
-Três funções independentes:
-- `salvar_foto(file)` — valida extensão, gera nome UUID, salva e retorna o caminho
-- `deletar_foto(url)` — remove o arquivo físico a partir do caminho armazenado no banco
-- `migrar_base64(candidato)` — converte fotos legadas em base64 para arquivo físico
-
-### `tests/conftest.py` — Infraestrutura de testes
-
-Usa `StaticPool` do SQLAlchemy para compartilhar a mesma conexão SQLite em memória entre a fixture e os requests HTTP do cliente de teste. O `app context` é mantido explicitamente via `ctx.push()/ctx.pop()`. O flag `TESTING=True` impede que o `_init_db()` de produção seja executado durante os testes.
+8 rotas de relatório, todas sob `/admin/eleicao/<unidade>/relatorio/<tipo>`. Usam `apurar_eleicao()` para dados ao vivo ou calculados.
 
 ---
 
@@ -264,34 +307,27 @@ Usa `StaticPool` do SQLAlchemy para compartilhar a mesma conexão SQLite em mem�
 pytest
 ```
 
-### Rodar com relatório de cobertura
+### Rodar com cobertura
 
 ```bash
 pytest --cov=app --cov-report=term-missing
 ```
 
-### Rodar apenas um módulo
-
-```bash
-pytest tests/test_votacao.py -v
-```
-
-### Organização
+### Organização (149 testes no total)
 
 | Arquivo | Cobertura |
 |---|---|
+| `test_dimensionamento.py` | 34 testes: todas as faixas da tabela NR-5, acima de 10.000, entradas inválidas |
+| `test_apuracao.py` | 15 testes: ordenação, desempate por admissão, desempate por nome, situação titular/suplente, rotas |
+| `test_relatorios.py` | 15 testes: todos os 8 relatórios, zérésima, unidade inválida, proteção de rota |
+| `test_eleicao.py` | Atualizado: novas rotas GET, data_abertura/encerramento, página de administração |
+| `test_funcionarios.py` | Atualizado: novos campos (setor, cargo, datas), edição, filtro por ativo |
 | `test_auth.py` | Login com sucesso/falha, proteção de rotas, logout |
-| `test_eleicao.py` | Abrir/fechar individual e em massa, rota inválida (404) |
-| `test_funcionarios.py` | Cadastro, matrícula duplicada, remoção, acesso não autenticado |
 | `test_votacao.py` | Voto válido, duplicado, eleição fechada, matrícula inválida, resultado |
-| `test_candidatos.py` | Cadastro, rejeição sem nome/unidade, listagem, remoção, acesso não autenticado |
-| `test_historico.py` | Listagem, detalhe, vencedor por unidade, exclusão, rotas inexistentes (404), acesso não autenticado |
-| `test_upload_funcionarios.py` | Importação via planilha Excel: upload válido, atualização de existentes, planilha mista, arquivo inválido, linhas incompletas, download do modelo, acesso não autenticado |
-| `test_concorrencia.py` | Configuração de workers no deploy, múltiplos votantes em sequência, proteção contra voto duplo |
-
-### Estratégia de isolamento
-
-Cada teste recebe um banco limpo (criado e descartado pela fixture `db`). Não há dependência de estado entre testes. Dados mínimos (admin + 7 eleições fechadas) são semeados automaticamente antes de cada teste.
+| `test_candidatos.py` | CRUD de candidatos, listagem, remoção, proteção |
+| `test_historico.py` | Listagem, detalhe, exclusão, rotas inexistentes, proteção |
+| `test_upload_funcionarios.py` | Importação Excel com novos campos, modelo atualizado |
+| `test_concorrencia.py` | Configuração de workers, múltiplos votantes, proteção contra voto duplo |
 
 ---
 
@@ -299,51 +335,21 @@ Cada teste recebe um banco limpo (criado e descartado pela fixture `db`). Não h
 
 O projeto está configurado para deploy automático no [Railway](https://railway.app).
 
-### Arquivos de configuração
-
 - **`Procfile`**: `web: gunicorn run:app --bind 0.0.0.0:$PORT --workers 5`
-- **`railway.toml`**: define builder Nixpacks, comando de start com 5 workers e healthcheck em `/`
+- **`railway.toml`**: builder Nixpacks, 5 workers, healthcheck em `/`
 
-### Variáveis obrigatórias no painel do Railway
+### Variáveis obrigatórias
 
 | Variável | Valor |
 |---|---|
-| `SECRET_KEY` | String aleatória longa (ex: gerada com `python -c "import secrets; print(secrets.token_hex(32))"`) |
-| `DATABASE_URL` | URI do banco PostgreSQL provisionado pelo Railway |
+| `SECRET_KEY` | String aleatória longa |
+| `DATABASE_URL` | URI do banco PostgreSQL |
 
 ### Limitações conhecidas
 
-- **Uploads de fotos não persistem** entre deploys por causa do sistema de arquivos efêmero do Railway. Para resolver, integrar `app/services/foto.py` com AWS S3 ou serviço equivalente.
-- **Sem migrations automáticas**: alterações no schema exigem recriar o banco ou executar SQL manualmente.
+- **Uploads de fotos não persistem** entre deploys (filesystem efêmero do Railway). Solução: integrar com AWS S3 ou Cloudflare R2.
+- **Sem migrations automáticas**: a migração incremental via `ALTER TABLE` cobre adições de coluna, mas não renomeações ou remoções.
 
 ---
-
-## Melhorias futuras
-
-### Infraestrutura
-- [ ] Integrar Flask-Migrate (Alembic) para gerenciar alterações de schema sem perda de dados
-- [ ] Substituir upload local por armazenamento em nuvem (AWS S3, Cloudflare R2)
-- [ ] Adicionar variável `FLASK_ENV` para selecionar config automaticamente (`DevelopmentConfig` / `ProductionConfig`)
-
-### Segurança
-- [ ] Adicionar rate limiting no login do admin e no login de votação para prevenir força bruta
-- [ ] Implementar CSRF protection via Flask-WTF (atualmente desabilitado nos testes via `WTF_CSRF_ENABLED=False`)
-- [ ] Expirar sessão de votação automaticamente após tempo limite
-
-### Funcionalidades
-- [ ] Permitir múltiplos administradores com níveis de acesso diferentes
-- [ ] Exportar resultado em PDF ou Excel diretamente pelo painel
-- [ ] Notificação por e-mail quando uma eleição for aberta
-- [ ] Modo de votação anônima auditável (dissociar voto do funcionário sem perder contagem)
-- [ ] Dashboard com gráficos de participação em tempo real
-
-### Qualidade
-- [x] Aumentar cobertura de testes para incluir candidatos e histórico
-- [ ] Adicionar testes de integração end-to-end (ex: Playwright ou Selenium)
-- [ ] Configurar CI/CD com GitHub Actions para rodar testes a cada push
-
----
-
-## Autor
 
 Desenvolvido para a Neoenergia Brasília — Processo Eleitoral CIPA 2026.

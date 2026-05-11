@@ -141,7 +141,12 @@ def test_baixar_modelo_e_arquivo_valido(logged_in_client, db):
     ws = wb.active
     cabecalho = [cell.value for cell in ws[1]]
 
-    assert cabecalho == ['matricula', 'nome', 'unidade']
+    assert cabecalho[:3] == ['matricula', 'nome', 'unidade']
+    # Novos campos opcionais também presentes no modelo
+    assert 'setor' in cabecalho
+    assert 'cargo' in cabecalho
+    assert 'data_admissao' in cabecalho
+    assert 'data_nascimento' in cabecalho
 
 
 # ── Proteção de rota ──────────────────────────────────────────────────────────

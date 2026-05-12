@@ -4,7 +4,13 @@
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\" -Recurse -Force)",
       "Bash(Select-Object FullName)",
       "Bash(Sort-Object FullName)",
-      "Bash(python -m pytest tests/test_dimensionamento.py tests/test_apuracao.py tests/test_relatorios.py tests/test_eleicao.py tests/test_funcionarios.py -v --tb=short)"
+      "Bash(python -m pytest tests/test_dimensionamento.py tests/test_apuracao.py tests/test_relatorios.py tests/test_eleicao.py tests/test_funcionarios.py -v --tb=short)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\" -Force)",
+      "Bash(Select-Object Name, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\\\\app\" -Recurse | Select-Object FullName | ForEach-Object {$_.FullName.Replace\\(\"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\\\\\", \"\"\\)} | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\\\\tests\" -Recurse | Select-Object FullName | ForEach-Object {$_.FullName.Replace\\(\"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\\\\\", \"\"\\)} | Sort-Object)",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\\\\templates\" -Recurse | Select-Object FullName | ForEach-Object {$_.FullName.Replace\\(\"C:\\\\Users\\\\Drax\\\\Desktop\\\\Projeto-Cipa-2026\\\\\", \"\"\\)} | Sort-Object)"
     ]
   }
 }

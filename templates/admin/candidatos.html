@@ -155,7 +155,7 @@
                     <th>Nome</th>
                     <th>Unidade</th>
                     <th>Alterar Foto</th>
-                    <th style="width:60px;"></th>
+                    <th style="width:110px;">Ações</th>
                 </tr>
             </thead>
             <tbody>
@@ -189,11 +189,24 @@
                         </form>
                     </td>
                     <td class="align-middle">
-                        <a href="{{ url_for('admin.remover_candidato', id=c.id) }}"
-                           class="btn btn-sm btn-outline-danger"
-                           onclick="return confirm('Remover {{ c.nome }}?')">
-                            <i class="bi bi-trash"></i>
-                        </a>
+                        <div class="d-flex gap-1">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalEditar"
+                                    data-id="{{ c.id }}"
+                                    data-nome="{{ c.nome }}"
+                                    data-unidade="{{ c.unidade or '' }}"
+                                    title="Editar candidato">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <a href="{{ url_for('admin.remover_candidato', id=c.id) }}"
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('Remover {{ c.nome }}?')"
+                               title="Remover candidato">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -230,11 +243,56 @@
     </a>
 </div>
 
+{# ── Modal de Edição de Candidato ── #}
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-labelledby="modalEditarLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="formEditar">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalEditarLabel">
+                        <i class="bi bi-pencil me-2" style="color:#003399;"></i>Editar Candidato
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nome completo</label>
+                        <input type="text" name="nome" id="editNome" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Unidade</label>
+                        <select name="unidade" id="editUnidade" class="form-select" required>
+                            {% for u in unidades %}
+                            <option value="{{ u }}">{{ u }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-lg"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Salvar alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 const collapseEl = document.getElementById('formAdicionar');
 const icon = document.getElementById('iconAdicionar');
 collapseEl.addEventListener('show.bs.collapse', () => icon.className = 'bi bi-chevron-up text-muted');
 collapseEl.addEventListener('hide.bs.collapse', () => icon.className = 'bi bi-chevron-down text-muted');
+
+document.getElementById('modalEditar').addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    document.getElementById('editNome').value = btn.dataset.nome;
+    document.getElementById('editUnidade').value = btn.dataset.unidade;
+    document.getElementById('formEditar').action = '/admin/candidatos/editar/' + btn.dataset.id;
+});
 </script>
 
 {% endblock %}

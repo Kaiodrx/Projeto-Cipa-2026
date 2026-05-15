@@ -112,6 +112,30 @@
 @media print {
     body { font-size: 10pt; }
     .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+
+    #admin_content,
+    .container,
+    .container-fluid {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+        padding: 0 2cm !important;
+    }
+
+    table {
+        width: 100% !important;
+        margin: 0 auto !important;
+    }
+
+    .card {
+        width: 100% !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+    }
+
+    p.text-muted {
+        text-align: center !important;
+    }
 }
 </style>
 {% endblock %}

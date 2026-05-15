@@ -71,6 +71,8 @@ Cada unidade tem sua própria linha em `Eleicao` com `status = 'aberta' | 'fecha
 
 Lógica de negócio isolada das rotas, fácil de testar individualmente:
 
+- **`eleitor.py`** — Valida o eleitor antes do acesso à votação. Função `validar_eleitor(matricula, unidade, data_nascimento_str)` retorna `(funcionario, None)` em caso de sucesso ou `(None, mensagem_erro)` em caso de falha. Usa mensagem genérica para matrícula inválida / unidade incorreta / data de nascimento errada para evitar enumeração de usuários.
+- **`participacao.py`** — Calcula participação por unidade e geral. `calcular_participacao_unidade(unidade)` e `calcular_participacao_geral()`. Base de cálculo = funcionários ativos (`ativo=True`). `PERCENTUAL_MINIMO = 50.0`. Retorna `{'total', 'votaram', 'pendentes', 'percentual', 'valida'}`.
 - **`dimensionamento.py`** — Calcula o número de titulares e suplentes pela Tabela I da NR-5 (Grau de Risco 3). Entrada: quantidade de funcionários. Suporta 13 faixas predefinidas + escalonamento acima de 10.000.
 - **`apuracao.py`** — Apura os votos por unidade. Ordena candidatos por: votos (desc) → data de admissão (asc) → nome (asc). Marca situações de empate.
 - **`foto.py`** — Upload de fotos com nome UUID, validação de extensão, deleção, migração de base64.
@@ -86,20 +88,40 @@ Lógica de negócio isolada das rotas, fácil de testar individualmente:
 | `Eleicao` | Status por unidade | id, unidade, status, data_abertura, data_encerramento |
 | `HistoricoEleicao` | Snapshots de eleições encerradas | id, titulo, data, dados (JSON) |
 
+### Autenticação do eleitor
+
+O acesso à votação (`/votacao`) exige três campos: **matrícula**, **unidade** e **data de nascimento**. A validação é feita pelo serviço `app/services/eleitor.py → validar_eleitor()`. A ordem de verificação é:
+
+1. Formato válido da data de nascimento (YYYY-MM-DD, enviado pelo `<input type="date">`)
+2. Matrícula existe no banco
+3. Unidade confere com o cadastro do funcionário
+4. Data de nascimento confere com o cadastro
+5. Funcionário está ativo
+6. Funcionário ainda não votou
+7. Eleição da unidade está aberta
+
+Os passos 2, 3 e 4 usam a mesma mensagem genérica de erro para evitar que alguém descubra se uma matrícula existe apenas tentando logins.
+
+### Participação — Dashboard gerencial
+
+`/admin/participacao` exibe um dashboard consolidado por unidade (não lista nominal). Usa `app/services/participacao.py`. Regra de validação: eleição considerada válida por unidade quando participação ≥ 50% dos funcionários ativos. A interface mostra um marcador visual do limiar de 50% na barra de progresso.
+
 ### Relatórios (`app/routes/admin/relatorios.py`)
 
-8 relatórios, todos otimizados para impressão direta pelo navegador (`@media print`):
+10 relatórios, todos otimizados para impressão direta pelo navegador (`@media print`):
 
-| Relatório | Conteúdo |
-|---|---|
-| Zerésima | Candidatos com zero votos (pré-eleição) |
-| Boletim | Resumo da cédula com participação |
-| Cartaz | Pôster visual dos eleitos (formato cartaz) |
-| Eleitos | Lista de titulares e suplentes eleitos |
-| Classificação | Ranking completo com status final |
-| Votantes | Quem votou com horário |
-| Não-votantes | Quem não votou |
-| Eleitores | Cadastro completo do eleitorado |
+| Relatório | Rota | Conteúdo |
+|---|---|---|
+| Zerésima | `/admin/eleicao/<unidade>/relatorio/zeresima` | Candidatos com zero votos (pré-eleição) |
+| Boletim | `/admin/eleicao/<unidade>/relatorio/boletim` | Resumo da cédula com participação |
+| Cartaz | `/admin/eleicao/<unidade>/relatorio/cartaz` | Pôster visual dos eleitos |
+| Eleitos | `/admin/eleicao/<unidade>/relatorio/eleitos` | Lista de titulares e suplentes eleitos |
+| Classificação | `/admin/eleicao/<unidade>/relatorio/classificacao` | Ranking completo com status final |
+| Votantes | `/admin/eleicao/<unidade>/relatorio/votantes` | Quem votou com horário |
+| Não-votantes | `/admin/eleicao/<unidade>/relatorio/nao-votantes` | Quem não votou |
+| Eleitores | `/admin/eleicao/<unidade>/relatorio/eleitores` | Cadastro completo do eleitorado |
+| Participação Dashboard | `/admin/relatorio/participacao/dashboard` | Visão consolidada por unidade (sem nomes), pronto para impressão gerencial |
+| Participação Nominal | `/admin/relatorio/participacao/nominal` | Lista de funcionários por unidade com status de participação. Aceita `?unidade=` para filtrar por unidade |
 
 ### Upload de fotos
 
@@ -113,18 +135,21 @@ Rota em `app/routes/admin/funcionarios.py` aceita planilha Excel (`.xlsx`) via `
 
 `tests/conftest.py` usa SQLite em memória com `StaticPool` (compartilha a conexão entre o fixture e a camada HTTP). Cada teste recebe um banco zerado via fixture `db` (escopo de função). O fixture `logged_in_client` fornece um cliente HTTP já autenticado como admin.
 
-**11 arquivos de teste (~149+ casos):**
+**12 arquivos de teste (179 casos):**
 - `test_auth.py` — Login/logout
 - `test_candidatos.py` — CRUD de candidatos
 - `test_funcionarios.py` — CRUD + importação Excel
 - `test_eleicao.py` — Abertura/encerramento de eleições
-- `test_votacao.py` — Fluxo completo de votação pública
+- `test_votacao.py` — Fluxo completo de votação pública, incluindo validação por data de nascimento
 - `test_apuracao.py` — Apuração e regras de desempate
 - `test_dimensionamento.py` — Dimensionamento NR-5 (todas as faixas)
-- `test_relatorios.py` — Todos os 8 relatórios
+- `test_relatorios.py` — Os 8 relatórios por unidade
+- `test_participacao.py` — Cálculo de participação + relatórios dashboard e nominal
 - `test_historico.py` — Histórico de eleições
 - `test_upload_funcionarios.py` — Importação via Excel
 - `test_concorrencia.py` — Prevenção de voto duplicado
+
+**Campos obrigatórios do fixture `funcionario` (conftest.py):** `data_nascimento=date(1985, 7, 20)`. Testes que fazem login de votação devem incluir `'data_nascimento': '1985-07-20'` no POST.
 
 ### Deploy
 

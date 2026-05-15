@@ -3,6 +3,7 @@ from . import public_bp
 from ...extensions import db
 from ...models import Funcionario, Candidato, Eleicao, Voto
 from ...constants import UNIDADES
+from ...services.eleitor import validar_eleitor
 
 
 @public_bp.route('/')
@@ -13,20 +14,14 @@ def home():
 @public_bp.route('/votacao', methods=['GET', 'POST'])
 def login_votacao():
     if request.method == 'POST':
-        matricula = request.form['matricula'].strip()
-        unidade = request.form['unidade'].strip()
-        funcionario = Funcionario.query.filter_by(matricula=matricula).first()
-        eleicao = Eleicao.query.filter_by(unidade=unidade).first()
-        if not funcionario:
-            flash('Matrícula não encontrada.', 'danger')
-        elif funcionario.unidade != unidade:
-            flash('Unidade incorreta para esta matrícula.', 'danger')
-        elif funcionario.ativo is False:
-            flash('Você não está habilitado a votar nesta eleição.', 'danger')
-        elif funcionario.votou:
-            flash('Você já votou nesta eleição.', 'warning')
-        elif not eleicao or eleicao.status != 'aberta':
-            flash('A eleição desta unidade não está aberta no momento.', 'warning')
+        matricula = request.form.get('matricula', '').strip()
+        unidade = request.form.get('unidade', '').strip()
+        data_nascimento = request.form.get('data_nascimento', '').strip()
+
+        funcionario, erro = validar_eleitor(matricula, unidade, data_nascimento)
+        if erro:
+            categoria = 'warning' if 'já votou' in erro or 'não está aberta' in erro else 'danger'
+            flash(erro, categoria)
         else:
             session['funcionario_id'] = funcionario.id
             return redirect(url_for('public.votar'))

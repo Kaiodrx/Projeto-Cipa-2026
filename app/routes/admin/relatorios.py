@@ -1,11 +1,12 @@
 from datetime import datetime
-from flask import render_template, abort
+from flask import render_template, abort, request
 from . import admin_bp
 from ...constants import UNIDADES
 from ...utils import login_required
 from ...models import Candidato, Funcionario, Eleicao, Voto
 from ...services.apuracao import apurar_eleicao
 from ...services.dimensionamento import calcular_dimensionamento
+from ...services.participacao import calcular_participacao_geral, calcular_participacao_unidade
 
 
 def _get_unidade_or_404(unidade):
@@ -182,5 +183,52 @@ def lista_eleitores(unidade):
         unidade=unidade,
         eleicao=eleicao,
         total=len(eleitores),
+        now=now,
+    )
+
+
+@admin_bp.route('/relatorio/participacao/dashboard')
+@login_required
+def participacao_dashboard():
+    dados = calcular_participacao_geral()
+    now = datetime.now().strftime('%d/%m/%Y às %H:%M')
+    return render_template(
+        'admin/relatorios/participacao_dashboard.html',
+        dados=dados,
+        now=now,
+    )
+
+
+@admin_bp.route('/relatorio/participacao/nominal')
+@login_required
+def participacao_nominal():
+    unidade_filtro = request.args.get('unidade', '').strip()
+    if unidade_filtro and unidade_filtro not in UNIDADES:
+        abort(404)
+
+    unidades_alvo = [unidade_filtro] if unidade_filtro else UNIDADES
+    dados_nominais = []
+    for unidade in unidades_alvo:
+        funcionarios = (
+            Funcionario.query
+            .filter_by(unidade=unidade, ativo=True)
+            .order_by(Funcionario.nome)
+            .all()
+        )
+        votaram = sum(1 for f in funcionarios if f.votou)
+        dados_nominais.append({
+            'unidade': unidade,
+            'funcionarios': funcionarios,
+            'total': len(funcionarios),
+            'votaram': votaram,
+            'pendentes': len(funcionarios) - votaram,
+        })
+
+    now = datetime.now().strftime('%d/%m/%Y às %H:%M')
+    return render_template(
+        'admin/relatorios/participacao_nominal.html',
+        dados_nominais=dados_nominais,
+        unidade_filtro=unidade_filtro,
+        unidades=UNIDADES,
         now=now,
     )

@@ -3,6 +3,7 @@ Testes de capacidade e configuração de workers.
 Cobre: workers configurados no deploy, múltiplos usuários votando, proteção contra voto duplo.
 """
 import pytest
+from datetime import date
 from app.extensions import db as _db
 from app.models import Funcionario, Voto
 from app.constants import UNIDADES
@@ -29,18 +30,24 @@ def test_railway_toml_configurado_com_multiplos_workers():
 def test_multiplos_funcionarios_votam_e_todos_votos_sao_contabilizados(app, db, candidato, eleicao_aberta):
     """20 funcionários diferentes votam em sequência: todos os votos devem ser contabilizados."""
     TOTAL = 20
+    DATA_NASC = date(1990, 1, 1)
     for i in range(TOTAL):
         _db.session.add(Funcionario(
             matricula=f'CONC{i:03d}',
             nome=f'Funcionario Conc {i}',
             unidade=UNIDADE,
             votou=False,
+            data_nascimento=DATA_NASC,
         ))
     _db.session.commit()
 
     for i in range(TOTAL):
         client = app.test_client()
-        resp = client.post('/votacao', data={'matricula': f'CONC{i:03d}', 'unidade': UNIDADE})
+        resp = client.post('/votacao', data={
+            'matricula': f'CONC{i:03d}',
+            'unidade': UNIDADE,
+            'data_nascimento': '1990-01-01',
+        })
         assert resp.status_code == 302, f'Login falhou para CONC{i:03d}'
         resp2 = client.post('/votar', data={'candidato_id': candidato.id})
         assert resp2.status_code == 302, f'Voto falhou para CONC{i:03d}'
@@ -57,6 +64,7 @@ def test_funcionario_ja_marcado_como_votou_nao_vota_novamente(client, db, funcio
     resp = client.post('/votacao', data={
         'matricula': funcionario.matricula,
         'unidade': UNIDADE,
+        'data_nascimento': '1985-07-20',
     }, follow_redirects=True)
 
     assert 'já votou' in resp.data.decode()
@@ -65,19 +73,28 @@ def test_funcionario_ja_marcado_como_votou_nao_vota_novamente(client, db, funcio
 
 def test_cada_funcionario_vota_apenas_uma_vez(app, db, candidato, eleicao_aberta):
     """Garante que o mesmo funcionário não consiga registrar dois votos distintos."""
-    f = Funcionario(matricula='UNICO01', nome='Funcionario Unico', unidade=UNIDADE, votou=False)
+    f = Funcionario(
+        matricula='UNICO01',
+        nome='Funcionario Unico',
+        unidade=UNIDADE,
+        votou=False,
+        data_nascimento=date(1992, 6, 15),
+    )
     _db.session.add(f)
     _db.session.commit()
 
     client = app.test_client()
 
     # Primeiro voto — deve funcionar
-    client.post('/votacao', data={'matricula': 'UNICO01', 'unidade': UNIDADE})
+    client.post('/votacao', data={'matricula': 'UNICO01', 'unidade': UNIDADE, 'data_nascimento': '1992-06-15'})
     client.post('/votar', data={'candidato_id': candidato.id})
 
     # Segunda tentativa — deve ser bloqueada
-    resp = client.post('/votacao', data={'matricula': 'UNICO01', 'unidade': UNIDADE},
-                       follow_redirects=True)
+    resp = client.post('/votacao', data={
+        'matricula': 'UNICO01',
+        'unidade': UNIDADE,
+        'data_nascimento': '1992-06-15',
+    }, follow_redirects=True)
 
     assert 'já votou' in resp.data.decode()
     _db.session.expire_all()

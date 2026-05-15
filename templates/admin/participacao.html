@@ -3,183 +3,133 @@
 
 {% block admin_content %}
 
-<div class="d-none d-print-block text-center mb-4">
-    <h2 class="fw-bold">Relatório de Participação — Eleição CIPA 2026</h2>
-    <p class="text-muted">Gerado em: {{ now }}</p>
-    <hr>
-</div>
-
-<div class="d-flex align-items-center justify-content-between mb-4 d-print-none flex-wrap gap-3">
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
     <div>
-        <h4 class="fw-bold mb-0">Relatório de Participação</h4>
-        <p class="text-muted mb-0" style="font-size:.825rem;">Acompanhe quem votou e quem ainda não votou por unidade</p>
+        <h4 class="fw-bold mb-0">Participação por Unidade</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Atualizado em {{ now }}</p>
     </div>
-    <div class="d-flex gap-2">
-        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('admin.participacao_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i> Relatório dashboard
+        </a>
+        <a href="{{ url_for('admin.participacao_nominal') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-list-ul"></i> Relatório nominal
+        </a>
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left"></i> Voltar
         </a>
-        <button onclick="window.print()" class="btn btn-outline-secondary">
-            <i class="bi bi-printer"></i> Imprimir
-        </button>
     </div>
 </div>
 
 {# ── Resumo geral ── #}
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card stat-green">
             <div class="stat-icon"><i class="bi bi-people"></i></div>
-            <div class="stat-value">{{ total_funcionarios }}</div>
-            <div class="stat-label">Total de Funcionários</div>
+            <div class="stat-value">{{ dados.total }}</div>
+            <div class="stat-label">Funcionários elegíveis</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card stat-blue">
             <div class="stat-icon"><i class="bi bi-check2-circle"></i></div>
-            <div class="stat-value">{{ total_votaram }}</div>
+            <div class="stat-value">{{ dados.votaram }}</div>
             <div class="stat-label">Já Votaram</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="stat-card stat-amber">
             <div class="stat-icon"><i class="bi bi-hourglass-split"></i></div>
-            <div class="stat-value">{{ total_pendentes }}</div>
-            <div class="stat-label">Ainda não Votaram</div>
+            <div class="stat-value">{{ dados.pendentes }}</div>
+            <div class="stat-label">Pendentes</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card {{ 'stat-green' if dados.valida else 'stat-amber' }}">
+            <div class="stat-icon"><i class="bi bi-bar-chart-line"></i></div>
+            <div class="stat-value">{{ dados.percentual }}%</div>
+            <div class="stat-label">Participação geral</div>
         </div>
     </div>
 </div>
 
-{# Barra geral #}
+{# Barra geral com marcador de 50% #}
 <div class="card mb-4">
     <div class="card-body">
-        {% set pct_geral = ((total_votaram / total_funcionarios * 100) | round(1)) if total_funcionarios > 0 else 0 %}
-        <div class="d-flex justify-content-between mb-2">
-            <span class="fw-semibold" style="font-size:.875rem;">Participação geral</span>
-            <span class="fw-bold" style="color:#00AA44;">{{ pct_geral }}%</span>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="fw-semibold" style="font-size:.875rem;">Participação geral consolidada</span>
+            <div class="d-flex align-items-center gap-2">
+                {% if dados.valida %}
+                <span class="badge bg-success"><i class="bi bi-check-circle"></i> Válida ≥ 50%</span>
+                {% else %}
+                <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Abaixo de 50%</span>
+                {% endif %}
+                <span class="fw-bold" style="color:#00AA44;">{{ dados.percentual }}%</span>
+            </div>
         </div>
-        <div class="progress" style="height:14px;">
-            <div class="progress-bar" style="width:{{ pct_geral }}%;"></div>
+        <div class="position-relative" style="height:18px;">
+            <div class="progress h-100">
+                <div class="progress-bar {{ 'bg-success' if dados.valida else 'bg-warning' }}"
+                     style="width:{{ dados.percentual }}%;"></div>
+            </div>
+            {# Marcador visual do mínimo de 50% #}
+            <div class="position-absolute top-0" style="left:50%;width:2px;height:100%;background:#dc3545;z-index:10;">
+                <span style="position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:.65rem;color:#dc3545;white-space:nowrap;">mín. 50%</span>
+            </div>
         </div>
     </div>
 </div>
 
-{# ── Por unidade ── #}
-{% for unidade in unidades %}
-{% set dados = dados_por_unidade[unidade] %}
-{% set pct = ((dados.votaram | length / dados.total * 100) | round(1)) if dados.total > 0 else 0 %}
-
-<div class="card mb-4" style="page-break-inside: avoid;">
-    <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-geo-alt-fill" style="color:#00AA44;"></i>
-            <strong>{{ unidade }}</strong>
+{# ── Cards por unidade ── #}
+<div class="row g-3">
+{% for item in dados.por_unidade %}
+<div class="col-md-6">
+    <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between py-2">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-geo-alt-fill" style="color:#00AA44;font-size:.9rem;"></i>
+                <strong style="font-size:.9rem;">{{ item.unidade }}</strong>
+            </div>
+            {% if item.total == 0 %}
+            <span class="badge bg-secondary">Sem cadastro</span>
+            {% elif item.valida %}
+            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Válida</span>
+            {% else %}
+            <span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Abaixo do mínimo</span>
+            {% endif %}
         </div>
-        <div class="d-flex align-items-center gap-3">
-            <span style="font-size:.82rem;color:#6b7280;">
-                <i class="bi bi-check2-circle text-success"></i> {{ dados.votaram | length }} votaram
-                &nbsp;·&nbsp;
-                <i class="bi bi-hourglass-split text-warning"></i> {{ dados.pendentes | length }} pendentes
-                &nbsp;·&nbsp;
-                <strong style="color:#00AA44;">{{ pct }}%</strong>
-            </span>
-        </div>
-    </div>
-
-    <div class="card-body pb-2">
-        <div class="progress mb-3" style="height:8px;">
-            <div class="progress-bar" style="width:{{ pct }}%;"></div>
-        </div>
-
-        {% if dados.total == 0 %}
-        <p class="text-muted text-center py-2" style="font-size:.85rem;">Nenhum funcionário cadastrado nesta unidade.</p>
-        {% else %}
-        <div class="row g-0">
-            {# Coluna: já votaram #}
-            <div class="col-md-6 pe-md-2">
-                <p class="fw-semibold mb-2 d-flex align-items-center gap-1" style="font-size:.8rem;color:#065f46;">
-                    <i class="bi bi-check2-circle"></i> Já votaram ({{ dados.votaram | length }})
-                </p>
-                {% if dados.votaram %}
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Matrícula</th>
-                                <th>Nome</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for f in dados.votaram %}
-                            <tr>
-                                <td>
-                                    <code style="background:#f3f4f6;padding:.15rem .4rem;border-radius:4px;font-size:.78rem;">
-                                        {{ f.matricula }}
-                                    </code>
-                                </td>
-                                <td style="font-size:.85rem;">{{ f.nome }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+        <div class="card-body py-3">
+            {% if item.total == 0 %}
+            <p class="text-muted mb-0" style="font-size:.85rem;">Nenhum funcionário ativo cadastrado.</p>
+            {% else %}
+            <div class="d-flex justify-content-between mb-1" style="font-size:.82rem;">
+                <span class="text-muted">{{ item.votaram }} de {{ item.total }} votaram</span>
+                <span class="fw-bold {{ 'text-success' if item.valida else 'text-danger' }}">
+                    {{ item.percentual }}%
+                </span>
+            </div>
+            <div class="position-relative" style="height:12px;">
+                <div class="progress h-100">
+                    <div class="progress-bar {{ 'bg-success' if item.valida else 'bg-warning' }}"
+                         style="width:{{ item.percentual }}%;"></div>
                 </div>
-                {% else %}
-                <p class="text-muted" style="font-size:.82rem;">Ninguém votou ainda.</p>
-                {% endif %}
+                <div class="position-absolute top-0" style="left:50%;width:1px;height:100%;background:#dc3545;opacity:.6;"></div>
             </div>
-
-            {# Divisor #}
-            <div class="col-md-1 d-none d-md-flex justify-content-center">
-                <div style="width:1px;background:#e5e7eb;margin:0 auto;"></div>
+            <div class="d-flex justify-content-between mt-2" style="font-size:.78rem;color:#6b7280;">
+                <span><i class="bi bi-check2-circle text-success"></i> {{ item.votaram }} votaram</span>
+                <span><i class="bi bi-hourglass-split text-warning"></i> {{ item.pendentes }} pendentes</span>
             </div>
-
-            {# Coluna: pendentes #}
-            <div class="col-md-5 ps-md-2 mt-3 mt-md-0">
-                <p class="fw-semibold mb-2 d-flex align-items-center gap-1" style="font-size:.8rem;color:#92400e;">
-                    <i class="bi bi-hourglass-split"></i> Pendentes ({{ dados.pendentes | length }})
-                </p>
-                {% if dados.pendentes %}
-                <div class="table-responsive">
-                    <table class="table table-sm mb-0">
-                        <thead>
-                            <tr>
-                                <th>Matrícula</th>
-                                <th>Nome</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for f in dados.pendentes %}
-                            <tr>
-                                <td>
-                                    <code style="background:#fff7ed;padding:.15rem .4rem;border-radius:4px;font-size:.78rem;">
-                                        {{ f.matricula }}
-                                    </code>
-                                </td>
-                                <td style="font-size:.85rem;">{{ f.nome }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-success" style="font-size:.82rem;">
-                    <i class="bi bi-check2-all"></i> Todos votaram!
-                </p>
-                {% endif %}
-            </div>
+            {% endif %}
         </div>
-        {% endif %}
     </div>
 </div>
 {% endfor %}
+</div>
 
-<p class="text-muted mt-2 d-print-block" style="font-size:.8rem;">
-    Relatório gerado em {{ now }} — Sistema de Votação CIPA 2026 — Neoenergia Brasília
+<p class="text-muted mt-4" style="font-size:.78rem;">
+    <i class="bi bi-info-circle"></i>
+    Base de cálculo: funcionários ativos. Eleição válida quando participação ≥ 50% por unidade.
+    Atualizado em {{ now }}.
 </p>
 
-<style>
-@media print {
-    body { background: #fff; font-size: 10pt; }
-    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
-}
-</style>
 {% endblock %}

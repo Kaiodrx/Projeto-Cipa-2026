@@ -1,0 +1,117 @@
+{% extends 'base_admin.html' %}
+{% block title %}Relatório de Participação — Dashboard — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <div>
+        <h4 class="fw-bold mb-0">Participação — Visão Consolidada</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Gerado em: {{ now }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('admin.participacao_nominal') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-list-ul"></i> Versão nominal
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a href="{{ url_for('admin.participacao') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="d-none d-print-block text-center mb-4">
+    <h2 class="fw-bold">RELATÓRIO DE PARTICIPAÇÃO — ELEIÇÃO CIPA 2026</h2>
+    <h5>Visão Consolidada por Unidade</h5>
+    <p class="text-muted">Gerado em: {{ now }}</p>
+    <hr>
+</div>
+
+{# Totalizador geral #}
+<div class="card mb-4">
+    <div class="card-header fw-semibold">Resumo Geral</div>
+    <div class="card-body">
+        <table class="table table-sm mb-0">
+            <tr>
+                <td class="text-muted" style="width:260px;">Total de funcionários elegíveis</td>
+                <td><strong>{{ dados.total }}</strong></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Total de votos computados</td>
+                <td><strong>{{ dados.votaram }}</strong></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Pendentes</td>
+                <td>{{ dados.pendentes }}</td>
+            </tr>
+            <tr>
+                <td class="text-muted">Participação geral</td>
+                <td>
+                    <strong>{{ dados.percentual }}%</strong>
+                    {% if dados.valida %}
+                    <span class="badge bg-success ms-2">Válida</span>
+                    {% else %}
+                    <span class="badge bg-danger ms-2">Abaixo do mínimo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="text-muted">Data/hora de emissão</td>
+                <td>{{ now }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+{# Por unidade #}
+<div class="card">
+    <div class="card-header fw-semibold">Participação por Unidade</div>
+    <div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Unidade</th>
+                    <th class="text-center">Elegíveis</th>
+                    <th class="text-center">Votaram</th>
+                    <th class="text-center">Pendentes</th>
+                    <th class="text-center">Participação</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in dados.por_unidade %}
+                <tr>
+                    <td><strong>{{ item.unidade }}</strong></td>
+                    <td class="text-center">{{ item.total }}</td>
+                    <td class="text-center text-success fw-semibold">{{ item.votaram }}</td>
+                    <td class="text-center text-warning">{{ item.pendentes }}</td>
+                    <td class="text-center fw-bold">{{ item.percentual }}%</td>
+                    <td class="text-center">
+                        {% if item.total == 0 %}
+                        <span class="badge bg-secondary">Sem cadastro</span>
+                        {% elif item.valida %}
+                        <span class="badge bg-success">Válida ≥ 50%</span>
+                        {% else %}
+                        <span class="badge bg-danger">Abaixo de 50%</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<p class="text-muted mt-3" style="font-size:.8rem;">
+    Eleição válida por unidade quando participação ≥ 50% dos funcionários elegíveis (ativos).
+    Relatório gerado em {{ now }} — Sistema de Votação CIPA 2026 — Neoenergia Brasília.
+</p>
+
+<style>
+@media print {
+    body { font-size: 10pt; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+}
+</style>
+{% endblock %}

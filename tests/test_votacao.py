@@ -1,6 +1,7 @@
 """
 Testes do fluxo público de votação.
-Cobre: voto válido, voto duplicado, eleição fechada, exibição de resultado.
+Cobre: autenticação com data de nascimento, voto válido, voto duplicado,
+eleição fechada, exibição de resultado.
 """
 import pytest
 from app.extensions import db as _db
@@ -9,26 +10,31 @@ from app.constants import UNIDADES
 
 UNIDADE = UNIDADES[0]
 
+# Data de nascimento correta do fixture `funcionario` (conftest.py)
+DATA_NASC_CORRETA = '1985-07-20'
+
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
-def _fazer_login_votacao(client, matricula, unidade):
+def _fazer_login_votacao(client, matricula, unidade, data_nascimento=DATA_NASC_CORRETA):
     return client.post('/votacao', data={
         'matricula': matricula,
         'unidade': unidade,
+        'data_nascimento': data_nascimento,
     }, follow_redirects=False)
 
 
-# ── Login de votação ───────────────────────────────────────────────────────────
+# ── Login de votação — matrícula / unidade ─────────────────────────────────────
 
 def test_login_votacao_com_matricula_invalida_exibe_erro(client, db, eleicao_aberta):
     resp = client.post('/votacao', data={
         'matricula': 'INEXISTENTE',
         'unidade': UNIDADE,
+        'data_nascimento': DATA_NASC_CORRETA,
     }, follow_redirects=True)
 
     assert resp.status_code == 200
-    assert 'não encontrada' in resp.data.decode()
+    assert 'Dados não conferem' in resp.data.decode()
 
 
 def test_login_votacao_com_unidade_incorreta_exibe_erro(client, db, funcionario, eleicao_aberta):
@@ -36,9 +42,10 @@ def test_login_votacao_com_unidade_incorreta_exibe_erro(client, db, funcionario,
     resp = client.post('/votacao', data={
         'matricula': funcionario.matricula,
         'unidade': outra_unidade,
+        'data_nascimento': DATA_NASC_CORRETA,
     }, follow_redirects=True)
 
-    assert 'Unidade incorreta' in resp.data.decode()
+    assert 'Dados não conferem' in resp.data.decode()
 
 
 def test_login_votacao_com_eleicao_fechada_exibe_aviso(client, db, funcionario):
@@ -46,6 +53,7 @@ def test_login_votacao_com_eleicao_fechada_exibe_aviso(client, db, funcionario):
     resp = client.post('/votacao', data={
         'matricula': funcionario.matricula,
         'unidade': UNIDADE,
+        'data_nascimento': DATA_NASC_CORRETA,
     }, follow_redirects=True)
 
     assert 'não está aberta' in resp.data.decode()
@@ -55,6 +63,44 @@ def test_login_votacao_com_sucesso_redireciona_para_votar(client, db, funcionari
     resp = _fazer_login_votacao(client, funcionario.matricula, UNIDADE)
     assert resp.status_code == 302
     assert '/votar' in resp.headers['Location']
+
+
+# ── Login de votação — data de nascimento ──────────────────────────────────────
+
+def test_login_votacao_com_data_nascimento_correta_permite_acesso(client, db, funcionario, eleicao_aberta):
+    resp = _fazer_login_votacao(client, funcionario.matricula, UNIDADE, '1985-07-20')
+    assert resp.status_code == 302
+    assert '/votar' in resp.headers['Location']
+
+
+def test_login_votacao_com_data_nascimento_incorreta_exibe_erro(client, db, funcionario, eleicao_aberta):
+    resp = client.post('/votacao', data={
+        'matricula': funcionario.matricula,
+        'unidade': UNIDADE,
+        'data_nascimento': '1990-01-01',
+    }, follow_redirects=True)
+
+    assert 'Dados não conferem' in resp.data.decode()
+
+
+def test_login_votacao_sem_data_nascimento_exibe_erro(client, db, funcionario, eleicao_aberta):
+    resp = client.post('/votacao', data={
+        'matricula': funcionario.matricula,
+        'unidade': UNIDADE,
+        'data_nascimento': '',
+    }, follow_redirects=True)
+
+    assert 'Dados não conferem' in resp.data.decode()
+
+
+def test_login_votacao_com_data_nascimento_formato_invalido_exibe_erro(client, db, funcionario, eleicao_aberta):
+    resp = client.post('/votacao', data={
+        'matricula': funcionario.matricula,
+        'unidade': UNIDADE,
+        'data_nascimento': 'nao-e-uma-data',
+    }, follow_redirects=True)
+
+    assert 'Dados não conferem' in resp.data.decode()
 
 
 # ── Registro de voto ───────────────────────────────────────────────────────────
@@ -88,6 +134,7 @@ def test_voto_duplicado_exibe_aviso_e_nao_registra(client, db, funcionario, cand
     resp = client.post('/votacao', data={
         'matricula': funcionario.matricula,
         'unidade': UNIDADE,
+        'data_nascimento': DATA_NASC_CORRETA,
     }, follow_redirects=True)
 
     assert 'já votou' in resp.data.decode()

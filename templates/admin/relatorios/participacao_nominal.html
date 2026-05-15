@@ -1,0 +1,109 @@
+{% extends 'base_admin.html' %}
+{% block title %}Relatório de Participação — Nominal — CIPA 2026{% endblock %}
+
+{% block admin_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3 d-print-none">
+    <div>
+        <h4 class="fw-bold mb-0">Participação — Visão Nominal</h4>
+        <p class="text-muted mb-0" style="font-size:.825rem;">Gerado em: {{ now }}</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        {# Filtro por unidade #}
+        <div class="d-flex align-items-center gap-2">
+            <select id="filtro-unidade" class="form-select form-select-sm" style="min-width:200px;"
+                    onchange="window.location.href='/admin/relatorio/participacao/nominal' + (this.value ? '?unidade=' + encodeURIComponent(this.value) : '')">
+                <option value="">Todas as unidades</option>
+                {% for u in unidades %}
+                <option value="{{ u }}" {{ 'selected' if u == unidade_filtro }}>{{ u }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <a href="{{ url_for('admin.participacao_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-grid"></i> Versão dashboard
+        </a>
+        <button onclick="window.print()" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-printer"></i> Imprimir
+        </button>
+        <a href="{{ url_for('admin.participacao') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+</div>
+
+<div class="d-none d-print-block text-center mb-4">
+    <h2 class="fw-bold">RELATÓRIO DE PARTICIPAÇÃO — ELEIÇÃO CIPA 2026</h2>
+    <h5>Visão Nominal — {{ unidade_filtro if unidade_filtro else 'Todas as Unidades' }}</h5>
+    <p class="text-muted">Gerado em: {{ now }}</p>
+    <hr>
+</div>
+
+{% for dados in dados_nominais %}
+<div class="card mb-4" style="page-break-inside: avoid;">
+    <div class="card-header d-flex align-items-center justify-content-between py-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-geo-alt-fill" style="color:#00AA44;"></i>
+            <strong>{{ dados.unidade }}</strong>
+        </div>
+        <span style="font-size:.82rem;color:#6b7280;">
+            <i class="bi bi-check2-circle text-success"></i> {{ dados.votaram }} votaram
+            &nbsp;·&nbsp;
+            <i class="bi bi-hourglass-split text-warning"></i> {{ dados.pendentes }} pendentes
+            &nbsp;·&nbsp;
+            <strong>{{ dados.total }} elegíveis</strong>
+        </span>
+    </div>
+    <div class="card-body p-0">
+        {% if dados.total == 0 %}
+        <p class="text-muted text-center py-3" style="font-size:.85rem;">Nenhum funcionário ativo cadastrado.</p>
+        {% else %}
+        <table class="table table-sm mb-0">
+            <thead>
+                <tr>
+                    <th>Matrícula</th>
+                    <th>Nome</th>
+                    <th>Setor</th>
+                    <th>Cargo</th>
+                    <th class="text-center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in dados.funcionarios %}
+                <tr>
+                    <td>
+                        <code style="background:#f3f4f6;padding:.1rem .35rem;border-radius:4px;font-size:.78rem;">
+                            {{ f.matricula }}
+                        </code>
+                    </td>
+                    <td style="font-size:.85rem;">{{ f.nome }}</td>
+                    <td style="font-size:.82rem;color:#6b7280;">{{ f.setor or '—' }}</td>
+                    <td style="font-size:.82rem;color:#6b7280;">{{ f.cargo or '—' }}</td>
+                    <td class="text-center">
+                        {% if f.votou %}
+                        <span class="badge bg-success">Votou</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Pendente</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+
+<p class="text-muted mt-2" style="font-size:.8rem;">
+    Relatório gerado em {{ now }} — Sistema de Votação CIPA 2026 — Neoenergia Brasília.
+    Base de cálculo: funcionários ativos.
+</p>
+
+<style>
+@media print {
+    body { font-size: 10pt; }
+    .card { border: 1px solid #ccc !important; box-shadow: none !important; }
+    .d-print-none { display: none !important; }
+}
+</style>
+{% endblock %}

@@ -11,7 +11,7 @@
                 <i class="bi bi-ballot-heart" style="font-size:1.5rem;color:#00AA44;"></i>
             </div>
             <h4 class="fw-bold mb-1">Eleição CIPA 2026</h4>
-            <p class="text-muted" style="font-size:.875rem;">Informe sua matrícula e selecione sua unidade</p>
+            <p class="text-muted" style="font-size:.875rem;">Informe seus dados para acessar a votação</p>
         </div>
 
         <div class="card">
@@ -23,7 +23,7 @@
                                placeholder="Ex: 00123" required autofocus
                                style="font-size:1.3rem;letter-spacing:.1em;font-weight:600;">
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-3">
                         <label class="form-label">Sua unidade</label>
                         <select name="unidade" class="form-select form-select-lg" required>
                             <option value="" disabled selected>Selecione sua unidade...</option>
@@ -31,6 +31,12 @@
                             <option value="{{ u }}">{{ u }}</option>
                             {% endfor %}
                         </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Sua data de nascimento</label>
+                        <input type="date" name="data_nascimento" class="form-control form-control-lg" required
+                               style="font-size:1rem;">
+                        <div class="form-text">Confirmação de identidade — não será exibida.</div>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 py-2 fs-6">
                         <i class="bi bi-arrow-right-circle"></i> Acessar votação

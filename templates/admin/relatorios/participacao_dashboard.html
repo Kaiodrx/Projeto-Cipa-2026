@@ -28,6 +28,42 @@
     <hr>
 </div>
 
+{# Totalizador geral #}
+<div class="card mb-4 d-print-none">
+    <div class="card-header fw-semibold">Resumo Geral</div>
+    <div class="card-body">
+        <table class="table table-sm mb-0">
+            <tr>
+                <td class="text-muted" style="width:260px;">Total de funcionários elegíveis</td>
+                <td><strong>{{ dados.total }}</strong></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Total de votos computados</td>
+                <td><strong>{{ dados.votaram }}</strong></td>
+            </tr>
+            <tr>
+                <td class="text-muted">Pendentes</td>
+                <td>{{ dados.pendentes }}</td>
+            </tr>
+            <tr>
+                <td class="text-muted">Participação geral</td>
+                <td>
+                    <strong>{{ dados.percentual }}%</strong>
+                    {% if dados.valida %}
+                    <span class="badge bg-success ms-2">Válida</span>
+                    {% else %}
+                    <span class="badge bg-danger ms-2">Abaixo do mínimo</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="text-muted">Data/hora de emissão</td>
+                <td>{{ now }}</td>
+            </tr>
+        </table>
+    </div>
+</div>
+
 {# Por unidade #}
 <div class="card">
     <div class="card-header fw-semibold">Participação por Unidade</div>
